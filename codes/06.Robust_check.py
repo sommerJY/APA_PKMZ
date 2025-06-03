@@ -12,10 +12,20 @@ from mpl_toolkits.mplot3d import Axes3D  # 반드시 import
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib.lines import Line2D
+from matplotlib import rcParams
 
 
-plt.rcParams['font.family'] = 'arial'
-plt.rcParams["font.serif"] = "Arial"
+datapath = './data/'
+plotpath = './figures/'
+
+# for pdf saving, text to vector 
+rcParams['pdf.fonttype'] = 42 
+rcParams['ps.fonttype'] = 42   # EPS 저장할 경우도 함께
+
+# Arial 폰트를 기본 sans-serif 폰트로 지정
+rcParams['font.family'] = 'sans-serif'
+rcParams['font.sans-serif'] = ['Arial']
+
 
 # notations for new methods in figures
 s_xi = r'$\xi$'
@@ -24,11 +34,6 @@ s_pcc = r'$\rho_p$'
 s_scc = r'$\rho_s$'
 s_zeta = r'$\zeta$'
 s_zeta_t = r'$\tilde\zeta$'
-
-# path check 
-datapath = './data/'
-plotpath = './figures/'
-
 
 
 Normalised_DG = pd.read_csv(datapath+'03.EXP_PC1_merge.DG.csv', index_col = 0 )
@@ -193,7 +198,7 @@ merged_all.to_csv(datapath+'06.Robust3.csv')
 
 # visualize 
 
-fig1 = plt.figure(figsize=(10, 8))
+fig1 = plt.figure(figsize=(7, 5))
 ax = fig1.add_subplot(111, projection='3d')
 
 cmap = plt.cm.get_cmap('viridis')

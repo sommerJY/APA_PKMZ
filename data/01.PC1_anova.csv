@@ -1,0 +1,9 @@
+,trial,name,df,F,p,sig
+0,All trials - yoked,PC1 ~ treatment,1,4.47,0.036,*
+1,All trials - yoked,PC2 ~ treatment,1,2.97,0.087, 
+2,All trials - trained,PC1 ~ treatment,1,1.16,0.283, 
+3,All trials - trained,PC2 ~ treatment,1,0.0,0.98, 
+4,Retention only - yoked,PC1 ~ treatment,1,4.71,0.046,*
+5,Retention only - yoked,PC2 ~ treatment,1,0.91,0.356, 
+6,Retention only - trained,PC1 ~ treatment,1,1.48,0.243, 
+7,Retention only - trained,PC2 ~ treatment,1,0.0,0.959, 

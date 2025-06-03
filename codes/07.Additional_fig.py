@@ -13,8 +13,16 @@ from matplotlib import rcParams
 import numpy as np
 import seaborn as sns 
 
+datapath = './data/'
+plotpath = './figures/'
 
+# for pdf saving, text to vector 
 rcParams['pdf.fonttype'] = 42 
+rcParams['ps.fonttype'] = 42   # EPS 저장할 경우도 함께
+
+# Arial 폰트를 기본 sans-serif 폰트로 지정
+rcParams['font.family'] = 'sans-serif'
+rcParams['font.sans-serif'] = ['Arial']
 
 # notations for new methods in figures
 s_xi = r'$\xi$'
@@ -23,10 +31,6 @@ s_pcc = r'$\rho_p$'
 s_scc = r'$\rho_s$'
 s_zeta = r'$Xi\rho$' # r'$\zeta$'
 s_zeta_t = r'$\tilde{Xi\rho}$'
-
-# path check 
-datapath = './data/'
-plotpath = './figures/'
 
 
 # SCALING fig 
@@ -305,16 +309,16 @@ y10 = -3 * x**3 + 9 * x**2 + 6 * x + 53 + 100 * noise
 ids = [id for id in range(1,11)]
 y_funcs = [y1,y2,y3,y4,y5,y6,y7,y8,y9,y10]
 x_funcs = [x,x,x,x,x,x,x,x,x,x]
-titles = ["Y1 = X", "Y1 = X",
-          "Y2 = X + noise","Y2 = X + noise",
-          "Y3 = 3X", "Y3 = 3X", 
-          "Y4 = 3X + noise", "Y4 = 3X + noise", 
-          "Y5 = X^2", "Y5 = X^2", 
-          "Y6 = X^2 + noise","Y6 = X^2 + noise",
-          "Y7 = 2^X", "Y7 = 2^X", 
-          "Y8 = 2^X + 10*noise", "Y8 = 2^X + 10*noise", 
-          "Y9 = -3X^3 + ... + 53", "Y9 = -3X^3 + ... + 53",
-          "Y10 = -3X^3 + ... + 100*noise","Y10 = -3X^3 + ... + 100*noise"]
+titles = ["Y1 = X", 
+          "Y2 = X + noise",
+          "Y3 = 3X", 
+          "Y4 = 3X + noise",
+          "Y5 = X^2",
+          "Y6 = X^2 + noise",
+          "Y7 = 2^X",
+          "Y8 = 2^X + 10*noise", 
+          "Y9 = -3X^3 + ... + 53",
+          "Y10 = -3X^3 + ... + 100*noise"]
 
 
 # Create a grid plot

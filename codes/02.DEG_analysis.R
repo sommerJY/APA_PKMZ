@@ -8,6 +8,8 @@ library(png)
 library(tidyverse) # for dataframe 
 library(scales) # formation or the digits 
 library(cowplot) ## for some easy to use themes
+library(apaTables)
+library(showtext)
 
 library(BiocParallel)
 register(MulticoreParam(8))
@@ -18,6 +20,8 @@ library(gplots)
 library(ggplot2)
 
 
+font_add("Arial", regular = "C:/Windows/Fonts/arial.ttf")  # or mac 경로
+showtext_auto()
 
 # most codes from Rayna Harris github
 
@@ -101,13 +105,12 @@ returnddstraining <- function(mytissue){
 }
 
 
-
 # DEGs with looking at all four treatments individually
-DGdds <- returnddstreatment("DG")  # DG ~ treatment DEG
+DGdds <- returnddstreatment("DG")  # DG ~ treatment DEG # 16992
 
-CA3dds <- returnddstreatment("CA3") # CA3 ~ treatment DEG
+CA3dds <- returnddstreatment("CA3") # CA3 ~ treatment DEG # 16481
 
-CA1dds <- returnddstreatment("CA1") # CA1 ~ treatment DEG
+CA1dds <- returnddstreatment("CA1") # CA1 ~ treatment DEG # 16840
 
 # DEGs with looking at all grouped trained and yoked
 DGdds2 <- returnddstraining("DG") 
@@ -255,7 +258,7 @@ CA1c <-  calculateDEGs(CA1dds, "CA1", "treatment", "conflict.trained", "standard
 CA1d <-  calculateDEGs(CA1dds, "CA1", "treatment", "conflict.yoked", "standard.yoked") 
 CA1e <- calculateDEGs(CA1dds2, "CA1", "training", "trained", "yoked") 
 
-
+CA1b[CA1b$direction != 'NS',]
 
 
 # save df with DEGs
@@ -335,76 +338,91 @@ pcadataframe <- function (object, intgroup = "condition", ntop = 500, returnData
 }
 
 
+
 plotPCs <- function(mydds, mytitle){
-  vsd <-  vst(mydds, blind=FALSE)
-  pcadata <- pcadataframe(vsd, intgroup=c("treatment", "training"), returnData=TRUE)
+  vsd <- vst(mydds, blind = FALSE)
+  pcadata <- pcadataframe(vsd, intgroup = c("treatment", "training"), returnData = TRUE)
   percentVar <- round(100 * attr(pcadata, "percentVar"))
-  
-  print(aov(PC1 ~ treatment, data=pcadata))
-  apa1 <- apa.aov.table(aov(PC1 ~ treatment, data=pcadata))
+  #
+  print(aov(PC1 ~ treatment, data = pcadata))
+  apa1 <- apa.aov.table(aov(PC1 ~ treatment, data = pcadata))
   apa1 <- as.data.frame(apa1$table_body) 
   errodf <- apa1 %>% filter(Predictor == "Error") %>% pull(df)
   pvalue <- apa1 %>% filter(Predictor == "treatment") %>% pull(p)
   Fstat <- apa1 %>% filter(Predictor == "treatment") %>% pull(F)
   treatmentdf <- apa1 %>% filter(Predictor == "treatment")  %>% pull(df)
-  mynewsubtitle <- paste("F", treatmentdf, ",", errodf, "=",
-                         Fstat, ",p=", pvalue, sep = "")
+  #
+  mynewsubtitle <- paste("F", treatmentdf, ",", errodf, "=", Fstat, ",p=", pvalue, sep = "")
+  #
   PCA12 <- ggplot(pcadata, aes(pcadata$PC1, pcadata$PC2)) +
-    geom_point(size=2, alpha = 0.8, 
-               aes(color=treatment)) +
-    stat_ellipse(aes(color=training)) +
-    xlab(paste0("PC1: ", percentVar[1],"%")) +
-    ylab(paste0("PC2: ", percentVar[2],"%")) +
-    scale_color_manual(drop = F,
-                       values = allcolors,
-                       breaks=c("standard.yoked", 
-                                "standard.trained", 
-                                "conflict.yoked", 
-                                "conflict.trained", 
-                                "yoked", 
-                                "trained",
-                                 "NS")) +
+    geom_point(size = 2, alpha = 0.8, aes(color = treatment)) +
+    stat_ellipse(aes(color = training)) +
+    xlab(paste0("PC1: ", percentVar[1], "%")) +
+    ylab(paste0("PC2: ", percentVar[2], "%")) +
+    scale_color_manual(
+      drop = FALSE,
+      values = allcolors,
+      breaks = c("standard.yoked", "standard.trained", 
+                 "conflict.yoked", "conflict.trained", 
+                 "yoked", "trained", "NS")
+    ) +
     labs(subtitle = mynewsubtitle, title = mytitle) +
     theme_ms() +
-    theme(legend.position = "none")
-  PCA12
+    theme(
+      legend.position = "none",
+      axis.text = element_text(size = 6),
+      axis.title = element_text(size = 8),
+      plot.title = element_text(size = 8),
+      plot.subtitle = element_text(size = 6),
+      legend.text = element_text(size = 6),
+      legend.title = element_text(size = 6)
+    )
+  return(PCA12)
 }
 
 
 plot.volcano <- function(data, mysubtitle){
   level_list = levels(data$direction)
-  # 각 요소의 count 계산
   count_table <- table(data$direction)
   counts <- setNames(as.integer(count_table[level_list]), level_list)
   counts[is.na(counts)] <- 0  # NA 값을 0으로 변환
   filtered_levels <- level_list[level_list != "NS"]
   filtered_counts <- counts[names(counts) %in% filtered_levels]
   legend_labels <- paste0(filtered_counts)
-  #
   volcano <- data %>%
     ggplot(aes(x = lfc, y = logpadj, color = direction)) + 
-    geom_point(size = 1, alpha = 1, na.rm = T,
-               show.legend = TRUE) +    
+    geom_point(size = 1, alpha = 1, na.rm = TRUE, show.legend = TRUE) +    
     theme_ms() +
-    scale_color_manual(values = allcolors,
-                       name = "", 
-                       labels = legend_labels,
-                       breaks = filtered_levels) +
-    ylim(c(0,12.5)) +  
-    xlim(c(-8,8)) +
-    labs(y = NULL, x = NULL ,
-         caption = "log fold change", 
-         subtitle = mysubtitle)  +
-    theme(legend.position = c(0.26, 0.9), 
-    legend.spacing.y = unit(0.1, 'cm'),
-    legend.key.size = unit(0.2, 'cm'),
-    plot.caption = element_text(hjust = 0.5),
-          axis.text.y = element_blank())  +
+    scale_color_manual(
+      values = allcolors,
+      name = "", 
+      labels = legend_labels,
+      breaks = filtered_levels
+    ) +
+    ylim(c(0, 12.5)) +  
+    xlim(c(-8, 8)) +
+    labs(
+      y = NULL, x = NULL,
+      caption = "log fold change",
+      subtitle = mysubtitle
+    ) +
     geom_hline(yintercept = 1, linetype = "dashed", color = "grey", size = 0.5) +
-    theme(plot.subtitle = element_text(hjust = 0))
-    return(volcano)
+    theme(
+      legend.position = c(0.26, 0.9), 
+      legend.spacing.y = unit(0.1, 'cm'),
+      legend.key.size = unit(0.2, 'cm'),
+      legend.background = element_blank(),
+      legend.box.background = element_blank(), 
+      axis.text = element_text(size = 6),
+      axis.title = element_text(size = 6),
+      legend.text = element_text(size = 6),
+      legend.title = element_text(size = 6),
+      plot.caption = element_text(hjust = 0.5, size = 6),
+      plot.subtitle = element_text(hjust = 0, size = 6),
+      plot.title = element_text(size = 8)
+    )
+  return(volcano)
 }
-
 
 
 
@@ -435,25 +453,30 @@ legend <- get_legend(a + theme(legend.position = "bottom",
                         guides(color = guide_legend(nrow = 2)))
 
 mainplot <- plot_grid(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r, 
-                        nrow = 3, rel_widths = c(1,1,0.8,0.8,0.8,0.8),
+                        nrow = 3, rel_widths = c(1,0.8,0.8,0.8,0.8,1),
                         labels = c("a", "b", "c", "d", "e", "f", 
                                     "", "", "", "", "", "", 
                                     "", "", "", "", "", ""),
-                        label_size = 8)
+                        label_size = 12)
 
 ## Warning in MASS::cov.trob(data[, vars]): Probable convergence failure
 
 fig4 <- plot_grid(mainplot, legend, ncol = 1, rel_heights = c(1, 0.1))
 
-ggsave(paste0(plotpath, '02.volcano.png'), plot = fig4 ) 
+ggsave(paste0(plotpath, '02.volcano.png'), width = 7, height = 6, plot = fig4, dpi = 300 ) 
 
-pdf(file=paste0(plotpath, '02.volcano.pdf'), width=6.69, height=6)
+ggsave(paste0(plotpath, "02.volcano.tiff"), plot = fig4, 
+       width = 7, height = 6, dpi = 300, compression = "lzw")
+
+ggsave(paste0(plotpath, "02.volcano.eps"), plot = fig4,
+       width = 7, height = 6, device = cairo_ps, family = "Arial", fallback_resolution = 300)
+
+cairo_pdf(file=paste0(plotpath, '02.volcano.pdf'), family = "Arial", width=7, height=6)
 plot(fig4)    
 dev.off()
 
-
-
 ###########
+
 
 # GO term overlap check 
 
@@ -507,7 +530,8 @@ rownames(overlap_df) = c('Response to stimulus (GO-0050896)','Translation (GO-00
 
 write.csv(overlap_df, paste0(datapath, '02.gene_ovlap.csv'), row.names = TRUE)
 
-
+DG_deg_list[DG_deg_list%in%LTP_Sanes_Lichtman2]
+# [1] "Adrb1"  "Bdnf"   "Egr1"   "Homer1" "Ntrk2"  "Stmn4"  "Vamp1" 
 
 
 

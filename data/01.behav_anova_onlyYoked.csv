@@ -1,0 +1,28 @@
+,trial,name,df,F,p,sig
+0,Pre-training,NumEntrances ~ treatment,1,0.15,0.707, 
+2,Pre-training,Time1stEntr ~ treatment,1,0.12,0.739, 
+1,Pre-training,pTimeShockZone ~ treatment,1,0.64,0.436, 
+10,Initial Training (T1~T3),NumEntrances ~ treatment,1,0.09,0.77, 
+9,Initial Training (T1~T3),NumEntrances ~ trial,2,8.89,0.001,**
+11,Initial Training (T1~T3),NumEntrances ~ trial*treatment,2,0.37,0.69, 
+16,Initial Training (T1~T3),Time1stEntr ~ treatment,1,0.28,0.598, 
+15,Initial Training (T1~T3),Time1stEntr ~ trial,2,5.85,0.006,**
+17,Initial Training (T1~T3),Time1stEntr ~ trial*treatment,2,0.09,0.915, 
+13,Initial Training (T1~T3),pTimeShockZone ~ treatment,1,0.15,0.705, 
+12,Initial Training (T1~T3),pTimeShockZone ~ trial,2,1.99,0.149, 
+14,Initial Training (T1~T3),pTimeShockZone ~ trial*treatment,2,0.25,0.779, 
+6,Retest,NumEntrances ~ treatment,1,0.14,0.714, 
+8,Retest,Time1stEntr ~ treatment,1,1.99,0.178, 
+7,Retest,pTimeShockZone ~ treatment,1,0.05,0.822, 
+19,Conflict Training (T4~T6),NumEntrances ~ treatment,1,0.29,0.59, 
+18,Conflict Training (T4~T6),NumEntrances ~ trial,2,0.49,0.617, 
+20,Conflict Training (T4~T6),NumEntrances ~ trial*treatment,2,0.16,0.855, 
+25,Conflict Training (T4~T6),Time1stEntr ~ treatment,1,1.01,0.32, 
+24,Conflict Training (T4~T6),Time1stEntr ~ trial,2,3.88,0.028,*
+26,Conflict Training (T4~T6),Time1stEntr ~ trial*treatment,2,2.45,0.097, 
+22,Conflict Training (T4~T6),pTimeShockZone ~ treatment,1,4.79,0.034,*
+21,Conflict Training (T4~T6),pTimeShockZone ~ trial,2,1.25,0.296, 
+23,Conflict Training (T4~T6),pTimeShockZone ~ trial*treatment,2,1.0,0.376, 
+3,Retention,NumEntrances ~ treatment,1,2.0,0.178, 
+5,Retention,Time1stEntr ~ treatment,1,2.77,0.117, 
+4,Retention,pTimeShockZone ~ treatment,1,11.29,0.004,**

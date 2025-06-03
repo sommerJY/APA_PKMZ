@@ -10,6 +10,15 @@ import scipy.stats as stats
 datapath = './data/'
 plotpath = './figures/'
 
+# for pdf saving, text to vector 
+rcParams['pdf.fonttype'] = 42 
+rcParams['ps.fonttype'] = 42   # EPS saving 
+
+# Arial as default
+rcParams['font.family'] = 'sans-serif'
+rcParams['font.sans-serif'] = ['Arial']
+
+
 
 # To merge expression and behavioral PC1 
 # I restarted separating the subfields, also to match with Asit code 
@@ -44,7 +53,7 @@ def get_count (sub, all_count):
     #
     count_list = [all_count, DG_count, CA3_count, CA1_count]
     return (count_list[subs.index(sub)])
-    
+
 
 def normalizing (sub):
     count_matrix = get_count(sub, countData)
@@ -63,7 +72,7 @@ def normalizing (sub):
     Normalised = count_matrix.div(size_factor.loc['Normalisation_sample'], axis=1)
     Normalised = Normalised.drop('geo_mean', axis = 1)
     return (Normalised, list(Normalised.index))
-    
+
 
 # outlier 포함한 결과 asit 같음 
 out_all, out_all_genes = normalizing('all') 
@@ -103,7 +112,9 @@ astrocytegenes = ["Aldh1a1", "Aldh1l1", "Aldh1l2", "Slc1a2", "Gfap", "Gjb6", "Fg
 
 # barplot and heatmap 
 
-def corr_matrix(sub_matrix, sub, candidategenes, title, titleA ='(a)', titleB ='(b)' ) :
+pc1_label = r'Pearson Coef. PC1$^{\mathrm{memory}}$'
+
+def corr_matrix(sub_matrix, sub, candidategenes, title, titleA ='a', titleB ='b' ) :
     exp_matrix = copy.deepcopy(sub_matrix)
     corr_list = candidategenes+['PC1','PC2']
     corr_matrix = np.zeros((len(corr_list), len(corr_list)))
@@ -118,43 +129,53 @@ def corr_matrix(sub_matrix, sub, candidategenes, title, titleA ='(a)', titleB ='
     custom_cmap = LinearSegmentedColormap.from_list("custom_cmap", ["#2680ff", "white", "#ff4a26"])
     norm = plt.Normalize(-1, 1)  # 
     #
-    fig, axes = plt.subplots(1, 2, figsize=(10, 5), gridspec_kw={'width_ratios': [0.7, 1.3]})
+    fig, axes = plt.subplots(1, 2, figsize=(7, 2.5), gridspec_kw={'width_ratios': [0.7, 1.3]})
     # Barplot 
     ax_bar = axes[0]
     tmp_df = corr_matrix_df.loc[candidategenes,'PC1']
     bar_colors = [custom_cmap(norm(val)) for val in tmp_df]
     sns.barplot(y=tmp_df.index, x=tmp_df.values, ax=ax_bar,  palette=bar_colors)
-    ax_bar.set_title(titleA, loc = 'left')
-    ax_bar.set_xlabel('Pearson Coef. PC1')
-    ax_bar.set_ylabel(sub)
+    ax_bar.set_title(titleA, loc = 'left', fontsize = 12)
+    ax_bar.set_xlabel(pc1_label, fontsize = 11)
+    ax_bar.set_ylabel(sub, fontsize= 11)
     ax_bar.set_xlim(-1,1)
-    ax_bar.axvline(x=-0.7, color='grey', linestyle='--', linewidth=3)
-    ax_bar.axvline(x=0.7, color='grey', linestyle='--', linewidth=3)
+    ax_bar.set_xticks(ax_bar.get_xticks())
+    ax_bar.set_xticklabels(ax_bar.get_xticklabels(), fontsize = 8)
+    ax_bar.set_yticks(ax_bar.get_yticks())
+    ax_bar.set_yticklabels(ax_bar.get_yticklabels(), fontsize = 8)
+    ax_bar.axvline(x=-0.7, color='grey', linestyle='--', linewidth=0.5)
+    ax_bar.axvline(x=0.7, color='grey', linestyle='--', linewidth=0.5)
     ax_bar.spines['top'].set_visible(False)
     ax_bar.spines['right'].set_visible(False)
     # Heatmap 
     ax_heat = axes[1]
     tmp_df = corr_matrix_df.loc[candidategenes,candidategenes]
     annot_matrix = np.where((np.abs(tmp_df) >= 0.6) & (np.abs(tmp_df) < 0.99), tmp_df.round(2).astype(str), "")
-    sns.heatmap(tmp_df, annot=annot_matrix, annot_kws={"color": "black", 'fontsize': 8},
+    sns.heatmap(tmp_df, annot=annot_matrix, annot_kws={"color": "black", 'fontsize': 6},
                 cmap=custom_cmap, center=0, ax=ax_heat,
                 linewidths=0, vmin=-1, vmax=1, fmt="", cbar = False)
-    ax_heat.set_title(titleB, loc = 'left')
+    ax_heat.set_title(titleB, loc = 'left', fontsize = 12)
     ax_heat.set_xlabel('')
     ax_heat.set_ylabel('')
+    ax_heat.set_xticks(ax_heat.get_xticks())
+    ax_heat.set_xticklabels(ax_heat.get_xticklabels(), fontsize = 8)
+    ax_heat.set_yticks(np.arange(len(tmp_df)) + 0.5)
+    ax_heat.set_yticklabels(tmp_df.index, rotation = 0 , fontsize = 8)
     plt.tight_layout()
     plt.savefig(plotpath + '03.bar_heat.{}.{}.png'.format(title, sub), dpi = 300)
     plt.savefig(plotpath + '03.bar_heat.{}.{}.pdf'.format(title, sub), dpi = 300)
+    plt.savefig(plotpath + '03.bar_heat.{}.{}.eps'.format(title, sub), dpi = 300)
+    plt.savefig(plotpath + '03.bar_heat.{}.{}.tiff'.format(title, sub), dpi = 300)
     plt.close()
 
 
-corr_matrix(RNA_DG, 'DG', candidategenes, 'candy')
-corr_matrix(RNA_CA3,'CA3', candidategenes, 'candy')
-corr_matrix(RNA_CA1, 'CA1', candidategenes, 'candy')
+corr_matrix(RNA_DG, 'DG', candidategenes, 'candy', titleA = 'a', titleB ='b')
+corr_matrix(RNA_CA3,'CA3', candidategenes, 'candy', titleA = 'c', titleB ='d')
+corr_matrix(RNA_CA1, 'CA1', candidategenes, 'candy', titleA = 'e', titleB ='f')
 
-corr_matrix(RNA_DG, 'DG', astrocytegenes, 'astro')
-corr_matrix(RNA_CA3, 'CA3', astrocytegenes,'astro')
-corr_matrix(RNA_CA1,'CA1', astrocytegenes, 'astro')
+corr_matrix(RNA_DG, 'DG', astrocytegenes, 'astro', titleA = 'a', titleB ='b')
+corr_matrix(RNA_CA3, 'CA3', astrocytegenes,'astro', titleA = 'c', titleB ='d')
+corr_matrix(RNA_CA1,'CA1', astrocytegenes, 'astro', titleA = 'e', titleB ='f')
 
 
 RNA_DG.to_csv(datapath+'03.EXP_PC1_merge.DG.csv')
@@ -163,10 +184,50 @@ RNA_CA1.to_csv(datapath+'03.EXP_PC1_merge.CA1.csv')
 
 
 
+# just to check pearson correlation difference
+# RNA_DG_yo = RNA_DG[RNA_DG.training == 'yoked']
+# RNA_DG_tr = RNA_DG[RNA_DG.training == 'trained']
+
+# corr_list = candidategenes
+# corr_matrix_yo = np.zeros((len(corr_list), len(corr_list)))
+# #
+# for i in range(0,len(corr_list)) : 
+#     for j in range(0,len(corr_list)) :
+#         corr_matrix_yo[i,j] = stats.pearsonr(RNA_DG_yo[corr_list[i]], RNA_DG_yo[corr_list[j]])[0]
+# #
+# corr_matrix_tr = np.zeros((len(corr_list), len(corr_list)))
+# #
+# for i in range(0,len(corr_list)) : 
+#     for j in range(0,len(corr_list)) :
+#         corr_matrix_tr[i,j] = stats.pearsonr(RNA_DG_tr[corr_list[i]], RNA_DG_tr[corr_list[j]])[0]
+
+# corr_matrix_diff = corr_matrix_tr - corr_matrix_yo
+
+# corr_matrix_df = pd.DataFrame(corr_matrix_diff)
+# corr_matrix_df.columns = corr_list
+# corr_matrix_df.index = corr_list
+# custom_cmap = LinearSegmentedColormap.from_list("custom_cmap", ["#2680ff", "white", "#ff4a26"])
+# norm = plt.Normalize(-1, 1)  # 
+
+# fig, axes = plt.subplots(1, 1, figsize=(3, 3))
+# ax_heat = axes
+# tmp_df = corr_matrix_df.loc[candidategenes,candidategenes]
+# annot_matrix = np.where((np.abs(tmp_df) >= 0.6) & (np.abs(tmp_df) < 0.99), tmp_df.round(2).astype(str), "")
+# sns.clustermap(tmp_df, annot_kws={"color": "black", 'fontsize': 6},
+#             cmap=custom_cmap, center=0, 
+#             linewidths=0, vmin=-1, vmax=1, fmt="", cbar = False)
+
+# ax_heat.set_xlabel('')
+# ax_heat.set_ylabel('')
+# ax_heat.set_xticks(ax_heat.get_xticks())
+# ax_heat.set_xticklabels(ax_heat.get_xticklabels(), fontsize = 8)
+# ax_heat.set_yticks(np.arange(len(tmp_df)) + 0.5)
+# ax_heat.set_yticklabels(tmp_df.index, rotation = 0 , fontsize = 8)
 
 
 
 ###########
+# correlation of DEG and PCs
 PC1_cor_list = []
 PC2_cor_list = []
 
@@ -296,6 +357,22 @@ tucky_df.to_csv(datapath + '03.candidate_Tucky.csv')
 
 tt_df = tt_df.reset_index(drop=True)
 tt_df.to_csv(datapath + '03.candidate_Ttest.csv')
+
+
+
+
+
+
+
+#####
+# fold change check 
+
+fc_check = RNA_DG[RNA_DG_genes + ['training']].groupby('training').mean().T
+fc_check['FC'] = fc_check['trained'] - fc_check['yoked']
+fc_check['candy'] = ['O' if x in candidategenes else 'X' for x in list(fc_check.index)]
+fc_check.to_csv(datapath + '03.candy_fc.csv')
+
+
 
 
 

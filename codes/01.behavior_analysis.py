@@ -17,6 +17,12 @@ plotpath = './figures/'
 
 # for pdf saving, text to vector 
 rcParams['pdf.fonttype'] = 42 
+rcParams['ps.fonttype'] = 42   # EPS 저장할 경우도 함께
+
+
+# Arial 폰트를 기본 sans-serif 폰트로 지정
+rcParams['font.family'] = 'sans-serif'
+rcParams['font.sans-serif'] = ['Arial']
 
 
 # facor levels
@@ -96,8 +102,9 @@ dfshocks_save[['treatment','trial','trialNum','m','se']].to_csv(datapath + '01.b
 
 
 # plot for behavioral traits
-fig1, axes = plt.subplots(nrows=4, ncols=1, figsize=(8, 10))
+fig1, axes = plt.subplots(nrows=4, ncols=1, figsize=(7, 10))
 axes = axes.flatten()
+
 
 
 
@@ -133,6 +140,8 @@ fig1.suptitle("Number of Shocks", fontsize=14, x=0.02, y=0.5, rotation=90, va='c
 plt.tight_layout()
 plt.savefig(plotpath + '01.bhv_shock.png', dpi = 300)
 plt.savefig(plotpath + '01.bhv_shock.pdf', dpi = 300, bbox_inches='tight')
+plt.savefig(plotpath + '01.bhv_shock.tiff', dpi = 300, bbox_inches='tight')
+plt.savefig(plotpath + '01.bhv_shock.eps', dpi = 300, bbox_inches='tight')
 plt.show()
 
 
@@ -215,6 +224,9 @@ axes.set_yticklabels('')
 
 plt.tight_layout()
 plt.savefig(plotpath+'01.PC_original.png', dpi = 300)
+plt.savefig(plotpath+'01.PC_original.pdf', dpi = 300)
+plt.savefig(plotpath+'01.PC_original.tiff', dpi = 300)
+plt.savefig(plotpath+'01.PC_original.eps', dpi = 300)
 plt.show()
 
 
@@ -238,6 +250,10 @@ for i in range(18):
 
 plt.tight_layout()
 plt.savefig(plotpath+'01.PC_series.png', dpi = 300)
+plt.savefig(plotpath+'01.PC_series.pdf', dpi = 300)
+plt.savefig(plotpath+'01.PC_series.tiff', dpi = 300)
+plt.savefig(plotpath+'01.PC_series.eps', dpi = 300)
+
 plt.show()
 
 
@@ -307,19 +323,21 @@ def plot_behavior_feature(ax, titi,  varname, namestr, ylims):
         sns.lineplot(data=group, x='trialNum', y='m', ax=ax, color=color, legend=None)
         sns.scatterplot(data=group, x='trialNum', y='m', ax=ax, s=30, color=color, legend=None)
     #
-    ax.set_ylabel(namestr)
-    ax.set_xlabel("trial")
+    ax.set_ylabel(namestr, fontsize = 8)
+    ax.set_xlabel("")
     ax.set_xticks(list(range(1,10)))
-    ax.set_xticklabels(["P", "T1", "T2", "T3", "Rt", "T4", "T5", "T6", "Rn"])
+    ax.set_xticklabels(["P", "T1", "T2", "T3", "Rt", "T4", "T5", "T6", "Rn"], fontsize = 8)
+    ax.set_yticks(ax.get_yticks())
+    ax.set_yticklabels(ax.get_yticklabels(), fontsize = 8)
     ax.set_ylim(ylims)
-    ax.set_title(titi, fontsize= 14, loc = 'left')
+    ax.set_title(titi, fontsize= 12, loc = 'left')
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     #return ax, df
 
 
 
-fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(9, 6))
+fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(7, 5))
 
 plot_behavior_feature(axes[0][0], 'a', 'NumEntrances', 'NumEntrances' ,  [0, 35])
 plot_behavior_feature(axes[0][1], 'b','Time1stEntr', 'Time1stEntr (min)' ,  [0, 400])
@@ -330,13 +348,13 @@ sns.scatterplot(
     x='PC1', y='PC2', data=pc_df,
     ax=axes[1][0], hue='treatment', 
     palette=treatmentcolors,     
-    s=100 , alpha = 0.5, legend = False )
+    s=80 , alpha = 1, legend = False )
 
-axes[1][0].set_ylabel('PC2 : {}% variance explained'.format(round(PC2_ratio*100, 1)), fontsize= 10)
-axes[1][0].set_xlabel('PC1 : {}% variance explained'.format(round(PC1_ratio*100, 1)), fontsize= 10)
+axes[1][0].set_ylabel('PC2 : {}% variance explained'.format(round(PC2_ratio*100, 1)), fontsize= 8)
+axes[1][0].set_xlabel('PC1 : {}% variance explained'.format(round(PC1_ratio*100, 1)), fontsize= 8)
 axes[1][0].set_xticklabels('')
 axes[1][0].set_yticklabels('')
-axes[1][0].set_title('d', fontsize = 14, loc = 'left')
+axes[1][0].set_title('d', fontsize = 12, loc = 'left')
 
 
 sns.barplot(
@@ -345,13 +363,13 @@ sns.barplot(
     ax = axes[1][1]
     )
 
-axes[1][1].set_xlabel('Estimates of memory', fontsize= 10)
-axes[1][1].set_ylabel('PC1 % contrib.', fontsize= 10)
+axes[1][1].set_xlabel('Estimates of memory', fontsize= 8)
+axes[1][1].set_ylabel('PC1 % contrib.', fontsize= 8)
 axes[1][1].set_xticks(list(range(8)))
 axes[1][1].set_yticks([0,2,4,6,8])
 axes[1][1].set_xticklabels(axes[1][1].get_xticklabels(), ha='right', fontsize = 8, rotation = 45)
-axes[1][1].set_yticklabels([0,2,4,6,8],fontsize = 8)
-axes[1][1].set_title('e', fontsize = 14, loc = 'left')
+axes[1][1].set_yticklabels(axes[1][1].get_yticklabels(),fontsize = 8)
+axes[1][1].set_title('e', fontsize = 12, loc = 'left')
 
 for spine in axes[1][1].spines.values():
     spine.set_visible(False)
@@ -363,13 +381,13 @@ sns.barplot(
     ax = axes[1][2]
     )
 
-axes[1][2].set_xlabel('Estimates of activity' , fontsize= 10)
-axes[1][2].set_ylabel('PC2 % contrib.', fontsize= 10)
+axes[1][2].set_xlabel('Estimates of activity' , fontsize= 8)
+axes[1][2].set_ylabel('PC2 % contrib.', fontsize= 8)
 axes[1][2].set_xticks(list(range(8)))
 axes[1][2].set_yticks([0,5,10,15,20])
 axes[1][2].set_xticklabels(axes[1][2].get_xticklabels(), ha='right', fontsize = 8, rotation = 45)
-axes[1][2].set_yticklabels([0,5,10,15,20],fontsize = 8)
-axes[1][2].set_title('f', fontsize = 14, loc = 'left')
+axes[1][2].set_yticklabels(axes[1][2].get_yticklabels(),fontsize = 8)
+axes[1][2].set_title('f', fontsize = 12, loc = 'left')
 
 for spine in axes[1][2].spines.values():
     spine.set_visible(False)
@@ -377,6 +395,9 @@ for spine in axes[1][2].spines.values():
 plt.tight_layout()
 plt.savefig(plotpath + '01.behav_bar.pdf', dpi = 300)
 plt.savefig(plotpath + '01.behav_bar.png', dpi = 300)
+plt.savefig(plotpath + '01.behav_bar.tiff', dpi = 300)
+plt.savefig(plotpath + '01.behav_bar.eps', dpi = 300) # alpha problem 
+
 plt.close()    
 
 
@@ -400,9 +421,8 @@ import statsmodels.api as sm
 from scipy import stats
 from statsmodels.formula.api import ols
 
-# 특정 trial phase 선택
 
-be_for_ano = copy.deepcopy(behavior)
+
 
 def run_anova(be_for_ano, trial_filter, formulas):
     results = []
@@ -416,7 +436,18 @@ def run_anova(be_for_ano, trial_filter, formulas):
         results.append(anova_result)
     combined_result = pd.concat(results)
     combined_result['trial'] = '_'.join(trial_filter)
+    print(combined_result)
     return combined_result.drop('Residual', axis=0)
+
+
+# Format and annotate tables
+def format_anova_table(table):
+    table['p'] = round(table['PR(>F)'], 3)
+    table['F'] = round(table['F'], 2)
+    table['df'] = table['df'].astype(int)
+    table['sig'] = ['***' if p < 0.001 else '**' if p < 0.01 else '*' if p < 0.05 else ' ' for p in table['p']]
+    return table
+
 
 # Define the models and phases
 formulas_single = {
@@ -434,35 +465,71 @@ formulas_double = {
 phases_single = ['Pre', 'Retention', 'Retest']
 phase_groups = [['T1', 'T2', 'T3'], ['T4_C1', 'T5_C2', 'T6_C3']]
 
-# Run single ANOVA
-results_single = []
+
+yoked_for_ano = copy.deepcopy(behavior)
+trained_for_ano = copy.deepcopy(behavior)
+yoked_for_ano = yoked_for_ano[yoked_for_ano.treatment.isin(['conflict.yoked','standard.yoked'])]
+trained_for_ano = trained_for_ano[trained_for_ano.treatment.isin(['conflict.trained','standard.trained'])]
+
+
+
+# Run single ANOVA - Yoked & Trained
+
+Yoked_results_single = []
 for phase in phases_single:
-    result = run_anova(be_for_ano, [phase], formulas_single)
-    results_single.append(result.loc['C(treatment)'])
+    result = run_anova(yoked_for_ano, [phase], formulas_single)
+    Yoked_results_single.append(result.loc['C(treatment)'])
 
-table_1 = pd.concat(results_single)
-table_1['trial'] = ['Pre-training'] * 3 + ['Retention'] * 3 + ['Retest'] * 3
-
-# Run two-way ANOVA
-table_2 = pd.concat([run_anova(be_for_ano, phase, formulas_double) for phase in phase_groups])
-table_2['trial'] = ['Initial Training (T1~T3)'] * 9 + ['Conflict Training (T4~T6)'] * 9
-
-# Format and annotate tables
-def format_anova_table(table):
-    table['p'] = round(table['PR(>F)'], 3)
-    table['F'] = round(table['F'], 2)
-    table['df'] = table['df'].astype(int)
-    table['sig'] = ['***' if p < 0.001 else '**' if p < 0.01 else '*' if p < 0.05 else ' ' for p in table['p']]
-    return table
+Yoked_table_1 = pd.concat(Yoked_results_single)
+Yoked_table_1['trial'] = ['Pre-training'] * 3 + ['Retention'] * 3 + ['Retest'] * 3
 
 
-table_1 = format_anova_table(table_1)[['trial', 'name', 'df', 'F', 'p', 'sig']]
-table_2['name2'] = ['trial', 'treatment', 'trial*treatment'] * 6
-table_2['name'] = table_2['name'] + ' ~ ' + table_2['name2']
-table_2 = format_anova_table(table_2)[['trial', 'name', 'df', 'F', 'p', 'sig']]
+Trained_results_single = []
+for phase in phases_single:
+    result = run_anova(trained_for_ano, [phase], formulas_single)
+    Trained_results_single.append(result.loc['C(treatment)'])
 
-# Merge tables
-table_merge = pd.concat([table_1, table_2]).reset_index(drop=True)
+Trained_table_1 = pd.concat(Trained_results_single)
+Trained_table_1['trial'] = ['Pre-training'] * 3 + ['Retention'] * 3 + ['Retest'] * 3
+
+
+
+
+
+# Run two-way ANOVA - Yoked & Trained 
+desired_order = ['Pre-training', 'Initial Training (T1~T3)', 'Retest', 'Conflict Training (T4~T6)', 'Retention', 'All trials', 'Retention only']
+
+
+Yoked_table_2 = pd.concat([run_anova(yoked_for_ano, phase, formulas_double) for phase in phase_groups])
+Yoked_table_2['trial'] = ['Initial Training (T1~T3)'] * 9 + ['Conflict Training (T4~T6)'] * 9
+
+Yoked_table_1 = format_anova_table(Yoked_table_1)[['trial', 'name', 'df', 'F', 'p', 'sig']]
+Yoked_table_2['name2'] = ['trial', 'treatment', 'trial*treatment'] * 6
+Yoked_table_2['name'] = Yoked_table_2['name'] + ' ~ ' + Yoked_table_2['name2']
+Yoked_table_2 = format_anova_table(Yoked_table_2)[['trial', 'name', 'df', 'F', 'p', 'sig']]
+
+Yoked_table_3 = pd.concat([Yoked_table_1, Yoked_table_2]).reset_index(drop=True)
+Yoked_table_3['trial'] = pd.Categorical(Yoked_table_3['trial'], categories=desired_order)
+Yoked_table_3 = Yoked_table_3.sort_values(['trial','name'])
+Yoked_table_3.to_csv(datapath + '01.behav_anova_onlyYoked.csv')
+
+
+Trained_table_2 = pd.concat([run_anova(trained_for_ano, phase, formulas_double) for phase in phase_groups])
+Trained_table_2['trial'] = ['Initial Training (T1~T3)'] * 9 + ['Conflict Training (T4~T6)'] * 9
+
+Trained_table_1 = format_anova_table(Trained_table_1)[['trial', 'name', 'df', 'F', 'p', 'sig']]
+Trained_table_2['name2'] = ['trial', 'treatment', 'trial*treatment'] * 6
+Trained_table_2['name'] = Trained_table_2['name'] + ' ~ ' + Trained_table_2['name2']
+Trained_table_2 = format_anova_table(Trained_table_2)[['trial', 'name', 'df', 'F', 'p', 'sig']]
+
+Trained_table_3 = pd.concat([Trained_table_1, Trained_table_2]).reset_index(drop=True)
+Trained_table_3['trial'] = pd.Categorical(Trained_table_3['trial'], categories=desired_order)
+Trained_table_3 = Trained_table_3.sort_values(['trial','name'])
+Trained_table_3.to_csv(datapath + '01.behav_anova_onlyTrain.csv')
+
+
+
+
 
 
 # Run ANOVA for all PCs
@@ -480,98 +547,173 @@ def run_anova_pc(be_for_ano, formulas):
     print(combined_result)
     return combined_result.drop('Residual', axis=0)
 
+
+
+yoked_only_pca_tot = pca_total[0][pca_total[0].treatment.isin(['conflict.yoked','standard.yoked'])]
+trained_only_pca_tot = pca_total[0][pca_total[0].treatment.isin(['conflict.trained','standard.trained'])]
+yoked_only_pca_rn = pca_Rn_all[0][pca_Rn_all[0].treatment.isin(['conflict.yoked','standard.yoked'])]
+trained_only_pca_rn = pca_Rn_all[0][pca_Rn_all[0].treatment.isin(['conflict.trained','standard.trained'])]
+
 pc_formulas = {'PC1 ~ treatment': 'PC1 ~ C(treatment)', 'PC2 ~ treatment': 'PC2 ~ C(treatment)'}
-ori_pcs = run_anova_pc(pca_total[0], pc_formulas).loc['C(treatment)']
-new_pcs = run_anova_pc(pca_Rn_all[0], pc_formulas).loc['C(treatment)']
 
-table_pcs = pd.concat([ori_pcs, new_pcs])
-table_pcs['trial'] = ['All trials', 'All trials', 'Retention only', 'Retention only']
-table_pcs['name'] = ['PC1 ~ treatment', 'PC2 ~ treatment'] * 2
-table_pcs = format_anova_table(table_pcs)
+pc_tots = [yoked_only_pca_tot, trained_only_pca_tot, yoked_only_pca_rn, trained_only_pca_rn]
+pc_names = ['All trials - yoked', 'All trials - trained', 'Retention only - yoked', 'Retention only - trained']
+pc_res = []
 
-# Combine all tables for final output
-table_merge2 = pd.concat([table_merge, table_pcs[['trial', 'name', 'df', 'F', 'p', 'sig']]]).reset_index(drop=True)
+for i in range(4) : 
+    pcto = pc_tots[i]
+    title = pc_names[i]
+    pcs = run_anova_pc(pcto, pc_formulas).loc['C(treatment)']
+    pcs['trial'] = title
+    pcs['name'] = ['PC1 ~ treatment', 'PC2 ~ treatment']
+    pc_res.append(pcs)
+
+
+table_pcs = format_anova_table(pd.concat(pc_res))
+table_pcs2 = table_pcs[['trial', 'name', 'df', 'F', 'p', 'sig']].reset_index(drop=True)
+
+table_pcs2.to_csv(datapath+'01.PC1_anova.csv')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# table 3 
+# yoked vs trained 
+
+def run_anova(be_for_ano, trial_filter, formulas):
+    results = []
+    trial_phase = be_for_ano[be_for_ano['trial'].isin(trial_filter)]
+    trial_phase['training'] = pd.Categorical(trial_phase['training'])
+    trial_phase['trial'] = pd.Categorical(trial_phase['trial'], categories = trial_filter)
+    for name, formula in formulas.items():
+        model = ols(formula, data=trial_phase).fit()
+        anova_result = sm.stats.anova_lm(model, typ=2)
+        anova_result['name'] = name
+        results.append(anova_result)
+    combined_result = pd.concat(results)
+    combined_result['trial'] = '_'.join(trial_filter)
+    print(combined_result)
+    return combined_result.drop('Residual', axis=0)
+
+
+# Format and annotate tables
+def format_anova_table(table):
+    table['p'] = round(table['PR(>F)'], 3)
+    table['F'] = round(table['F'], 2)
+    table['df'] = table['df'].astype(int)
+    table['sig'] = ['***' if p < 0.001 else '**' if p < 0.01 else '*' if p < 0.05 else ' ' for p in table['p']]
+    return table
+
+
+# Define the models and phases
+formulas_single = {
+    'NumEntrances ~ training': 'NumEntrances ~ C(training)',
+    'pTimeShockZone ~ training': 'pTimeShockZone ~ C(training)',
+    'Time1stEntr ~ training': 'Time1stEntr ~ C(training)'
+}
+
+formulas_double = {
+    'NumEntrances': 'NumEntrances ~ C(trial) + C(training) + C(trial):C(training)',
+    'pTimeShockZone': 'pTimeShockZone ~ C(trial) + C(training) + C(trial):C(training)',
+    'Time1stEntr': 'Time1stEntr ~ C(trial) + C(training) + C(trial):C(training)'
+}
+
+phases_single = ['Pre', 'Retention', 'Retest']
+phase_groups = [['T1', 'T2', 'T3'], ['T4_C1', 'T5_C2', 'T6_C3']]
+
+
+tot_for_ano = copy.deepcopy(behavior)
+
+
+
+# Run single ANOVA - Yoked & Trained
+
+Tot_results_single = []
+for phase in phases_single:
+    result = run_anova(tot_for_ano, [phase], formulas_single)
+    Tot_results_single.append(result.loc['C(training)'])
+
+Tot_table_1 = pd.concat(Tot_results_single)
+Tot_table_1['trial'] = ['Pre-training'] * 3 + ['Retention'] * 3 + ['Retest'] * 3
+
+
+# Run two-way ANOVA - Yoked & Trained 
 desired_order = ['Pre-training', 'Initial Training (T1~T3)', 'Retest', 'Conflict Training (T4~T6)', 'Retention', 'All trials', 'Retention only']
-table_merge2['trial'] = pd.Categorical(table_merge2['trial'], categories=desired_order, ordered=True)
-table_merge3 = table_merge2.sort_values(['trial', 'name']).reset_index(drop=True)
 
 
-table_merge3.to_csv(datapath+'01.behav_anova.csv')
+Tot_table_2 = pd.concat([run_anova(tot_for_ano, phase, formulas_double) for phase in phase_groups])
+Tot_table_2['trial'] = ['Initial Training (T1~T3)'] * 9 + ['Conflict Training (T4~T6)'] * 9
+
+Tot_table_1 = format_anova_table(Tot_table_1)[['trial', 'name', 'df', 'F', 'p', 'sig']]
+Tot_table_2['name2'] = ['trial', 'train', 'trial*train'] * 6
+Tot_table_2['name'] = Tot_table_2['name'] + ' ~ ' + Tot_table_2['name2']
+Tot_table_2 = format_anova_table(Tot_table_2)[['trial', 'name', 'df', 'F', 'p', 'sig']]
+
+Tot_table_3 = pd.concat([Tot_table_1, Tot_table_2]).reset_index(drop=True)
+Tot_table_3['trial'] = pd.Categorical(Tot_table_3['trial'], categories=desired_order)
+Tot_table_3 = Tot_table_3.sort_values(['trial','name'])
+Tot_table_3.to_csv(datapath + '01.behav_anova_YKvsTR.csv')
 
 
-# tucky test for each phase 
 
-import pandas as pd
-from statsmodels.stats.multicomp import pairwise_tukeyhsd
-
-trial_phase = copy.deepcopy(be_for_ano)
-trial_phase['treatment2'] = list(trial_phase["treatment"])
-trial_phase['trial_phase_trial'] = trial_phase["treatment2"]+'_'+trial_phase["trial"]
-trial_phase['treatment'] = pd.Categorical(trial_phase['treatment'])
-trial_phase['trial'] = pd.Categorical(trial_phase['trial'], categories = ['Pre', 'T1', 'T2', 'T3', 'Retest', 'T4_C1', 'T5_C2', 'T6_C3', 'Retention'])
-
-
-phases = ['Pre', 'T1', 'T2', 'T3', 'Retest', 'T4_C1', 'T5_C2', 'T6_C3', 'Retention']
-
-def tucky_df (trial_phase_filt, for_var, phph) : 
-    tukey_result_v1 = pairwise_tukeyhsd(
-        endog=trial_phase_filt[for_var],       # 종속 변수
-        groups=trial_phase_filt["treatment"],           # 그룹 변수
-        alpha=0.05                        # 유의수준
-    )
-    tukey_result_v1_re = pd.DataFrame(data=tukey_result_v1.summary().data[1:],  # 첫 행은 header이므로 [1:]부터
-                            columns=tukey_result_v1.summary().data[0]) 
-    #
-    tukey_result_v1_re['group1_tr'] = tukey_result_v1_re.group1.apply(lambda x : x.split('.')[1])
-    tukey_result_v1_re['group2_tr'] = tukey_result_v1_re.group2.apply(lambda x : x.split('.')[1])
-    tukey_result_v1_re = tukey_result_v1_re[tukey_result_v1_re.group1_tr == tukey_result_v1_re.group2_tr]
-    tukey_result_v1_re['name'] = for_var
-    tukey_result_v1_re['phase'] = phph
-    return(tukey_result_v1_re)
+# Run ANOVA for all PCs
+def run_anova_pc(be_for_ano, formulas):
+    results = []
+    tmp_ano = copy.deepcopy(be_for_ano)
+    tmp_ano['training'] = pd.Categorical(tmp_ano['training'])
+    for name, formula in formulas.items():
+        model = ols(formula, data=tmp_ano).fit()
+        anova_result = sm.stats.anova_lm(model, typ=2) 
+        # typ1 : order matters, typ2 : take only Main effect, typ3 : also check interaction among conditions
+        anova_result['name'] = name
+        results.append(anova_result)
+    combined_result = pd.concat(results)
+    print(combined_result)
+    return combined_result.drop('Residual', axis=0)
 
 
-tucky_res_list = []
-for phph in phases : 
-    trial_phase_filt = trial_phase[trial_phase.trial == phph]
-    trial_tucky_re1 = tucky_df(trial_phase_filt, 'NumEntrances', phph)
-    trial_tucky_re2 = tucky_df(trial_phase_filt, 'pTimeShockZone', phph)
-    trial_tucky_re3 = tucky_df(trial_phase_filt, 'Time1stEntr', phph)
-    tucky_res_list.append(trial_tucky_re1)
-    tucky_res_list.append(trial_tucky_re2)
-    tucky_res_list.append(trial_tucky_re3)
+TOT_pca_tot = pca_total[0]
+TOT_pca_rn = pca_Rn_all[0]
+
+pc_formulas = {'PC1 ~ training': 'PC1 ~ C(training)', 'PC2 ~ treatment': 'PC2 ~ C(training)'}
+
+pc_tots = [TOT_pca_tot, TOT_pca_rn]
+pc_names = ['All trials','Retention only']
+pc_res = []
+
+for i in range(2) : 
+    pcto = pc_tots[i]
+    title = pc_names[i]
+    pcs = run_anova_pc(pcto, pc_formulas).loc['C(training)']
+    pcs['trial'] = title
+    pcs['name'] = ['PC1 ~ training', 'PC2 ~ training']
+    pc_res.append(pcs)
 
 
-tucky_res_df = pd.concat(tucky_res_list)
-tucky_res_df = tucky_res_df[['phase','name','group1','group2','meandiff','p-adj','reject' ]]
-tucky_res_df = tucky_res_df.reset_index(drop = True)
-tucky_res_df['meandiff'] = np.round(tucky_res_df['meandiff'], 2)
-tucky_res_df['p-adj'] = np.round(tucky_res_df['p-adj'], 4)
-tucky_res_df['reject'] = ['*' if p < 0.05 else '' for p in list(tucky_res_df['p-adj']) ]
-tucky_res_df.columns = ['trial', 'name', 'group1', 'group2', 'meandiff', 'p-adj', 'sig.']
-phase_name = ['Pre-training', 'Initial Training 1','Initial Training 2','Initial Training 3', 'Retest', 'Conflict Training 4','Conflict Training 5','Conflict Training 6', 'Retention']
-tucky_res_df['trial'] = [phase for phase in phase_name for _ in range(6)]
+table_pcs = format_anova_table(pd.concat(pc_res))
+table_pcs2 = table_pcs[['trial', 'name', 'df', 'F', 'p', 'sig']].reset_index(drop=True)
 
-tucky_res_df.to_csv(datapath+'01.behav_tucky.csv')
+table_pcs2.to_csv(datapath+'01.PC1_anova_YKTR.csv')
 
 
-# If want to check by adding phase to group name
-tukey_result_1 = pairwise_tukeyhsd(
-    endog=trial_phase["NumEntrances"],       
-    groups=trial_phase["trial_phase_trial"],        
-    alpha=0.05                       
-)
 
-tukey_result_2 = pairwise_tukeyhsd(
-    endog=trial_phase["pTimeShockZone"],   
-    groups=trial_phase["trial_phase_trial"],
-    alpha=0.05                
-)
 
-tukey_result_3 = pairwise_tukeyhsd(
-    endog=trial_phase["Time1stEntr"],   
-    groups=trial_phase["trial_phase_trial"],  
-    alpha=0.05   
-)
 
 
 
