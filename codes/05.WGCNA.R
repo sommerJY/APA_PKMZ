@@ -19,6 +19,8 @@ rownames(data_all) = sample_name
 rownames(data_ext) = sample_name
 
 
+
+
 traitData = DG_original[c('treatment','training','Prkcz','Camk2a','PC1')]
 rownames(traitData) = sample_name
 
@@ -75,7 +77,8 @@ enableWGCNAThreads(nThreads = NULL)
 
 
 # check threshold
-ST_all <- pickSoftThreshold(data_all_exp) # 이미 내 데이터가 있다는 것을 명시하면 된다고 함 
+# 이미 내 데이터가 있다는 것을 명시하면 된다고 함 
+ST_all <- pickSoftThreshold(data_all_exp) 
 ST_ext <- pickSoftThreshold(data_ext_exp) 
 
 
@@ -118,6 +121,9 @@ mean_conn_plot = function(ST, name) {
 mean_conn_plot(ST_all, 'ALL')
 mean_conn_plot(ST_ext, 'EXT')
 
+
+
+
 softPower <- 6
 
 
@@ -151,14 +157,14 @@ moduleFact_plot_png = function(module.trait.correlation, textMatrix, allTraits, 
     par(oma=c(2,2,1,1))
     labeledHeatmap(Matrix = module.trait.correlation,
     xLabels = names(allTraits),
-    yLabels = names(MEs),
-    ySymbols = names(MEs),
+    yLabels = gsub("^ME", "", names(MEs)),   # <--- ME 제거
+    ySymbols = gsub("^ME", "", names(MEs)),
     colorLabels = FALSE,
     colors = blueWhiteRed(50),
     textMatrix = textMatrix,
     setStdMargins = FALSE,
     zlim = c(-1,1),
-    cex.text = 0.5, cex.lab=0.5)
+    cex.text = 0.8, cex.lab=0.8)
     dev.off()
 }
 
@@ -166,16 +172,17 @@ moduleFact_plot_pdf = function(module.trait.correlation, textMatrix, allTraits, 
     pdf(paste0(plotpath,"05.Module_fact_", name,".pdf"), width = 6, height = 5)
     par(mar=c(4,5,1,1))
     par(oma=c(2,2,1,1))
-    labeledHeatmap(Matrix = module.trait.correlation,
+    labeledHeatmap(
+    Matrix = module.trait.correlation,
     xLabels = names(allTraits),
-    yLabels = names(MEs),
-    ySymbols = names(MEs),
+    yLabels = gsub("^ME", "", names(MEs)),   # <--- ME 제거
+    ySymbols = gsub("^ME", "", names(MEs)),
     colorLabels = FALSE,
     colors = blueWhiteRed(50),
     textMatrix = textMatrix,
     setStdMargins = FALSE,
     zlim = c(-1,1),
-    cex.text = 0.5, cex.lab=0.5)
+    cex.text = 0.8, cex.lab=0.8)
     dev.off()
 }
 
@@ -186,7 +193,7 @@ moduleFact_plot_pdf = function(module.trait.correlation, textMatrix, allTraits, 
 # check our pair data
 
 all_pair = read.csv(paste0(datapath,'04.all_relationship_GG.csv')) 
-all_gene = unique(c(all_pair_raw$geneA, all_pair_raw$geneB))
+all_gene = unique(c(all_pair$geneA, all_pair$geneB))
 
 # 714
 n_genes = length(all_gene) ; print(length(all_gene))
@@ -235,7 +242,7 @@ SCC_matrix <- matrix(0, nrow = n_genes, ncol = n_genes, dimnames = list(all_gene
 for (i in 1:nrow(all_pair)) {
     gene1 <- all_pair$geneA[i]
     gene2 <- all_pair$geneB[i]
-    SCOR2_score <- all_pair$SCOR2[i]
+    SCOR2_score <- all_pair$SCOR[i]
     if (gene1 == gene2) {
         SCC_matrix[gene1, gene2] <- 1  # 같은 gene인 경우 1을 넣음
     } else {
@@ -275,7 +282,7 @@ for (i in 1:length(all_gene)) {
 
 MAX_matrix <- pmax(adjMatrix, SCC_matrix)
 
-Z_score_matrix = sqrt(adjMatrix^2 + SCC_matrix^2) / sqrt(2)
+SIGMA_matrix = sqrt(adjMatrix^2 + SCC_matrix^2) / sqrt(2)
 # have to match max to 1 
 
 
@@ -315,7 +322,8 @@ ORI_version = function(name, data__exp, allTraits, softPower, deepSplit = 4, pva
     # Mask correlations and p-values based on threshold
     module_trait_correlation_masked <- ifelse(abs(module_trait_Pvalue) >= pval, "", signif(module_trait_correlation, 2))
     module_trait_Pvalue_masked <- ifelse(abs(module_trait_Pvalue) >= pval, "", paste0('(', signif(module_trait_Pvalue, 2), ')'))
-    textMatrix <- paste(module_trait_correlation_masked, module_trait_Pvalue_masked, sep = "")
+    textMatrix <- module_trait_correlation_masked
+    # textMatrix <- paste(module_trait_correlation_masked, module_trait_Pvalue_masked, sep = "")
     dim(textMatrix) <- dim(module_trait_correlation_masked)
     # Plot module-trait relationships
     moduleFact_plot_png(module_trait_correlation, textMatrix, allTraits, MEs, name)
@@ -362,7 +370,8 @@ XI_version = function(name, data_exp, this_adj, allTraits, deepSplit = 4, pval =
     # Mask correlations and p-values based on threshold
     module_trait_correlation_masked <- ifelse(abs(module_trait_Pvalue) >= pval, "", signif(module_trait_correlation, 2))
     module_trait_Pvalue_masked <- ifelse(abs(module_trait_Pvalue) >= pval, "", paste0('(', signif(module_trait_Pvalue, 2), ')'))
-    textMatrix <- paste(module_trait_correlation_masked, module_trait_Pvalue_masked, sep = "")
+    textMatrix <- module_trait_correlation_masked
+    #textMatrix <- paste(module_trait_correlation_masked, module_trait_Pvalue_masked, sep = "")
     dim(textMatrix) <- dim(module_trait_correlation_masked)
     # Plot module-trait relationships
     moduleFact_plot_png(module_trait_correlation, textMatrix, allTraits, MEs, name)
@@ -374,6 +383,7 @@ XI_version = function(name, data_exp, this_adj, allTraits, deepSplit = 4, pval =
 ######################### Min cluster size 15 version 
 
 power = 6
+
 
 #1 Original version without prkcz and camk2a 
 ori_EXT_power = ORI_version('ori_EXT_power_S15', data_filter_ext, allTraits, 6, deepSplit= 4, minClusterSize = 15)
@@ -388,32 +398,273 @@ MAX_nopower_ext = MAX_matrix[!rownames(MAX_matrix) %in% c('Prkcz','Camk2a'),!col
 MAX_power_ext = MAX_nopower_ext^power
 MAX_power_ext = XI_version('MAX_power_ext_S15', data_filter_ext, MAX_power_ext, allTraits, deepSplit = 4, minClusterSize = 15)
 
-# 4 Z score version 
-Z_nopower_ext = Z_score_matrix[!rownames(Z_score_matrix) %in% c('Prkcz','Camk2a'),!colnames(Z_score_matrix) %in% c('Prkcz','Camk2a')]
-Z_power_ext = Z_nopower_ext^power
-Z_power_ext = XI_version('Z_power_ext_S15', data_filter_ext, Z_power_ext, allTraits, deepSplit = 4, minClusterSize = 15)
+# 4 SIGMA score version 
+SIGMA_nopower_ext = SIGMA_matrix[!rownames(SIGMA_matrix) %in% c('Prkcz','Camk2a'),!colnames(SIGMA_matrix) %in% c('Prkcz','Camk2a')]
+SIGMA_power_ext = SIGMA_nopower_ext^power
+SIGMA_power_ext = XI_version('SIGMA_power_ext_S15', data_filter_ext, SIGMA_power_ext, allTraits, deepSplit = 4, minClusterSize = 15)
+
+
+
+
+#1 Original version without prkcz and camk2a 
+ori_EXT_power_30 = ORI_version('ori_EXT_power_S30', data_filter_ext, allTraits, 6, deepSplit= 4, minClusterSize = 30)
+
+#2 XI version 
+adjMatrix_nopower_ext_30 = adjMatrix[!rownames(adjMatrix) %in% c('Prkcz','Camk2a'),!colnames(adjMatrix) %in% c('Prkcz','Camk2a')]
+adjMatrix_power_ext_30 = adjMatrix_nopower_ext_30^power
+XI_power_ext_30 = XI_version('XI_power_ext_S30', data_filter_ext, adjMatrix_power_ext_30, allTraits, deepSplit = 4, minClusterSize = 30)
+
+# 3  MAX based version 
+MAX_nopower_ext = MAX_matrix[!rownames(MAX_matrix) %in% c('Prkcz','Camk2a'),!colnames(MAX_matrix) %in% c('Prkcz','Camk2a')]
+MAX_power_ext_30 = MAX_nopower_ext^power
+MAX_power_ext_30 = XI_version('MAX_power_ext_S30', data_filter_ext, MAX_power_ext_30, allTraits, deepSplit = 4, minClusterSize = 30)
+
+# 4 SIGMA score version 
+SIGMA_nopower_ext = SIGMA_matrix[!rownames(SIGMA_matrix) %in% c('Prkcz','Camk2a'),!colnames(SIGMA_matrix) %in% c('Prkcz','Camk2a')]
+SIGMA_power_ext_30 = SIGMA_nopower_ext^power
+SIGMA_power_ext_30 = XI_version('SIGMA_power_ext_S30', data_filter_ext, SIGMA_power_ext_30, allTraits, deepSplit = 4, minClusterSize = 30)
+
+
+
+#1 Original version without prkcz and camk2a 
+ori_EXT_power_D2S15 = ORI_version('ori_EXT_power_D2S15', data_filter_ext, allTraits, 6, deepSplit= 2, minClusterSize = 15)
+
+#2 XI version 
+adjMatrix_nopower_ext_D2S15 = adjMatrix[!rownames(adjMatrix) %in% c('Prkcz','Camk2a'),!colnames(adjMatrix) %in% c('Prkcz','Camk2a')]
+adjMatrix_power_ext_D2S15 = adjMatrix_nopower_ext_D2S15^power
+XI_power_ext_D2S15 = XI_version('XI_power_ext_D2S15', data_filter_ext, adjMatrix_power_ext_D2S15, allTraits, deepSplit = 2, minClusterSize = 15)
+
+# 3  MAX based version 
+MAX_nopower_ext_D2S15 = MAX_matrix[!rownames(MAX_matrix) %in% c('Prkcz','Camk2a'),!colnames(MAX_matrix) %in% c('Prkcz','Camk2a')]
+MAX_power_ext_D2S15 = MAX_nopower_ext_D2S15^power
+MAX_power_ext_D2S15 = XI_version('MAX_power_ext_D2S15', data_filter_ext, MAX_power_ext_D2S15, allTraits, deepSplit = 2, minClusterSize = 15)
+
+# 4 SIGMA score version 
+SIGMA_nopower_ext_D2S15 = SIGMA_matrix[!rownames(SIGMA_matrix) %in% c('Prkcz','Camk2a'),!colnames(SIGMA_matrix) %in% c('Prkcz','Camk2a')]
+SIGMA_power_ext_D2S15 = SIGMA_nopower_ext_D2S15^power
+SIGMA_power_ext_D2S15 = XI_version('SIGMA_power_ext_D2S15', data_filter_ext, SIGMA_power_ext_D2S15, allTraits, deepSplit = 2, minClusterSize = 15)
+
+
+
+
+
+
+
+# tom similarity matrix to PCA values
+
+
+# 시각화
+library(plotly)
+
+SIGMA_matrix_maker = function(sample_matrix, all_gene, name) {
+    sample_matrix$SIGMA <- abs(sample_matrix$SIGMA)
+    SIGMA_matrix <- matrix(0, nrow = length(all_gene), ncol = length(all_gene), 
+                           dimnames = list(all_gene, all_gene))
+    #
+    for (i in 1:nrow(sample_matrix)) {
+        gene1 <- sample_matrix$geneA[i]
+        gene2 <- sample_matrix$geneB[i]
+        SIGMA_score <- sample_matrix$SIGMA[i]
+        if (gene1 == gene2) {
+            SIGMA_matrix[gene1, gene2] <- 1  # normalized diagonal
+        } else {
+            SIGMA_matrix[gene1, gene2] <- SIGMA_score
+            SIGMA_matrix[gene2, gene1] <- SIGMA_score
+        }
+    }
+    #
+    SIGMA_matrix <- SIGMA_matrix / sqrt(2)
+    diag(SIGMA_matrix) <- 1 # max to 1 
+    #
+    TOM_MI <- TOMsimilarity(SIGMA_matrix)
+    TOM_dist <- 1 - TOM_MI
+    #
+    pca_result <- cmdscale(as.dist(TOM_dist), k = 3, eig = TRUE)
+    pca_df <- data.frame(
+        Gene = rownames(SIGMA_matrix),
+        PC1 = pca_result$points[, 1],
+        PC2 = pca_result$points[, 2],
+        PC3 = pca_result$points[, 3]
+    )
+
+    #col_val <- read.csv(paste0(datapath, '04.TRAIN_color_val.csv'), row.names = 1)
+    #pca_df$hex_val <- col_val[pca_df$Gene, 1]
+    write.csv(SIGMA_matrix, paste0(datapath, "05.TOMsim_", name, ".csv"))
+    return(pca_df)
+}
+
+
+all_SIGMA = read.csv(paste0(datapath,'04.all_relationship_GG.csv')) 
+yoked_SIGMA = read.csv(paste0(datapath,'04.all_relationship_GG_YOKED.csv')) 
+trained_SIGMA = read.csv(paste0(datapath,'04.all_relationship_GG_TRAINED.csv')) 
+
+all_SIGMA_mat = SIGMA_matrix_maker(all_SIGMA, all_gene, "all")
+yoked_SIGMA_mat = SIGMA_matrix_maker(yoked_SIGMA, all_gene, "yoked")
+trained_SIGMA_mat = SIGMA_matrix_maker(trained_SIGMA, all_gene, "trained")
+
+
+
+# python to visualize
+# python to visualize
+# python to visualize
+
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import scipy.stats as stats
+from scipy.optimize import curve_fit
+from scipy.stats import norm
+from joblib import Parallel, delayed
+import matplotlib.colors as mcolors
+from matplotlib.colors import LinearSegmentedColormap, to_hex
+import matplotlib.patches as mpatches
+from matplotlib.legend_handler import HandlerPatch
+import networkx as nx
+import community
+from community import community_louvain
+from gprofiler import GProfiler
+from collections import defaultdict
+from pyvis.network import Network
+from sklearn.decomposition import PCA
+from tqdm import tqdm
+import copy
+import colorsys
+from sklearn.metrics.pairwise import cosine_similarity
+from matplotlib import rcParams
+import os 
+
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.animation import FuncAnimation, PillowWriter
+
+
+# for pdf saving, text to vector 
+rcParams['pdf.fonttype'] = 42 
+rcParams['ps.fonttype'] = 42   # EPS 
+
+datapath = './data/'
+plotpath = './figures/'
+
+all_SIGMA_mat = pd.read_csv(datapath + "05.TOMsim_all.csv", index_col = 0)
+yoked_SIGMA_mat = pd.read_csv(datapath + "05.TOMsim_yoked.csv", index_col = 0)
+trained_SIGMA_mat = pd.read_csv(datapath + "05.TOMsim_trained.csv", index_col = 0)
+
+color_vals = pd.read_csv(datapath + "04.TRAIN_color_val.csv", index_col = 0)
+
+
+if all_SIGMA_mat.isnull().values.any():
+    print("There are NaN values in all_SIGMA_mat.")
+
+if yoked_SIGMA_mat.isnull().values.any():
+    print("There are NaN values in yoked_SIGMA_mat.")
+
+if trained_SIGMA_mat.isnull().values.any():
+    print("There are NaN values in trained_SIGMA_mat.")
+
+
+
+all(all_SIGMA_mat.columns == yoked_SIGMA_mat.columns)
+all(all_SIGMA_mat.columns == trained_SIGMA_mat.columns)
+
+
+def correlation_pca_plot3(input_df, name) : 
+    pca_all = PCA()
+    scores_all = pca_all.fit_transform(input_df) 
+    evs = pca_all.explained_variance_ # 각 eigenvalue 고윳값 
+    evr = pca_all.explained_variance_ratio_     # 각 PC의 분산 비율
+    pcs = np.arange(1, len(evs)+1)
+    scores_all_df = pd.DataFrame(data=scores_all, index = list(input_df.index))
+    PC_df = pd.DataFrame(data=scores_all_df, columns=[0,1])
+    # 
+    num_lim = 10
+    fig, axes = plt.subplots(ncols = 2, nrows = 1, figsize= (6, 3))
+    #
+    axes[0].bar(pcs[0:num_lim], evr[0:num_lim], alpha=0.6)
+    axes[0].plot(pcs[0:num_lim], np.cumsum(evr)[0:num_lim], 'r--', marker='o', label='Cumulative')
+    axes[0].set_xticks(pcs[0:num_lim])
+    axes[0].set_xlabel('PC')
+    axes[0].set_ylabel('Variance Ratio')
+    axes[0].grid(axis = 'y')
+    axes[0].legend()
+    #
+    PC_df['hex_val'] = color_vals['hex_val'][PC_df.index].values
+    axes[1].scatter(PC_df[0], PC_df[1], alpha=0.8, c = PC_df['hex_val'], edgecolors = None, linewidths = 0, s = 20)
+    axes[1].set_xlabel('PC 1')
+    axes[1].set_ylabel('PC 2')
+    axes[1].grid(True)
+    #
+    plt.tight_layout()
+    plt.savefig(plotpath+name+'.PCA_spec.png', dpi = 300)
+    plt.savefig(plotpath+name+'.PCA_spec.eps', dpi = 300)
+    plt.savefig(plotpath+name+'.PCA_spec.pdf', dpi = 300)
+    return(PC_df)
+
+sigma_all = correlation_pca_plot3(all_SIGMA_mat, "05.all_SIGMA_mat")
+sigma_yoked = correlation_pca_plot3(yoked_SIGMA_mat, "05.yoked_SIGMA_mat")
+sigma_trained = correlation_pca_plot3(trained_SIGMA_mat, "05.trained_SIGMA_mat")
+
+
+
+
+
+
+def plot_3d_rgb (this_df, title ) : 
+    def on_key(event):
+        if event.key == 'j':
+            fig.savefig(plotpath+title+'.pdf', format='pdf', dpi=300, bbox_inches='tight')
+            fig.savefig(plotpath+title+'.eps', format='eps', dpi=300, bbox_inches='tight')
+            print("Saved")
+    fig = plt.figure(figsize=(8, 6))
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(
+        this_df['PC1'],
+        this_df['PC2'],
+        this_df['PC3'],
+        c=this_df['hex_val'],
+        marker='o',  # circle
+        s=70,
+        linewidth=0,
+        alpha=0.8
+    )
+    ax.set_xlabel('PC1')
+    ax.set_ylabel('PC2')
+    ax.set_zlabel('PC3')
+    ax.view_init(elev=30, azim=90)
+    plt.tight_layout()
+    fig.canvas.mpl_connect('key_press_event', on_key)
+    plt.show()
+
+
+
+
+plot_3d_rgb(sigma_all, "05.all_SIGMA_mat")
+plot_3d_rgb(sigma_yoked, "05.yoked_SIGMA_mat")
+plot_3d_rgb(sigma_trained, "05.trained_SIGMA_mat")
+
+
 
 
 
 ######################### Min cluster size 20 version 
 
 #1 Original version without prkcz and camk2a 
-ori_EXT_power = ORI_version('ori_EXT_power_S20', data_filter_ext, allTraits, 6, deepSplit= 4, minClusterSize = 20)
+ori_EXT_power_S20 = ORI_version('ori_EXT_power_S20', data_filter_ext, allTraits, 6, deepSplit= 4, minClusterSize = 20)
 
 #2 XI version 
-adjMatrix_nopower_ext = adjMatrix[!rownames(adjMatrix) %in% c('Prkcz','Camk2a'),!colnames(adjMatrix) %in% c('Prkcz','Camk2a')]
-adjMatrix_power_ext = adjMatrix_nopower_ext^power
-XI_power_ext = XI_version('XI_power_ext_S20', data_filter_ext, adjMatrix_power_ext, allTraits, deepSplit = 4, minClusterSize = 20)
+adjMatrix_nopower_ext_S20 = adjMatrix[!rownames(adjMatrix) %in% c('Prkcz','Camk2a'),!colnames(adjMatrix) %in% c('Prkcz','Camk2a')]
+adjMatrix_power_ext_S20 = adjMatrix_nopower_ext_S20^power
+XI_power_ext_S20 = XI_version('XI_power_ext_S20', data_filter_ext, adjMatrix_power_ext_S20, allTraits, deepSplit = 4, minClusterSize = 20)
 
 # 3  MAX based version 
-MAX_nopower_ext = MAX_matrix[!rownames(MAX_matrix) %in% c('Prkcz','Camk2a'),!colnames(MAX_matrix) %in% c('Prkcz','Camk2a')]
-MAX_power_ext = MAX_nopower_ext^power
-MAX_power_ext = XI_version('MAX_power_ext_S20', data_filter_ext, MAX_power_ext, allTraits, deepSplit = 4, minClusterSize = 20)
+MAX_nopower_ext_S20 = MAX_matrix[!rownames(MAX_matrix) %in% c('Prkcz','Camk2a'),!colnames(MAX_matrix) %in% c('Prkcz','Camk2a')]
+MAX_power_ext_S20 = MAX_nopower_ext_S20^power
+MAX_power_ext_S20 = XI_version('MAX_power_ext_S20', data_filter_ext, MAX_power_ext_S20, allTraits, deepSplit = 4, minClusterSize = 20)
 
-# 4 Z score version 
-Z_nopower_ext = Z_score_matrix[!rownames(Z_score_matrix) %in% c('Prkcz','Camk2a'),!colnames(Z_score_matrix) %in% c('Prkcz','Camk2a')]
-Z_power_ext = Z_nopower_ext^power
-Z_power_ext = XI_version('Z_power_ext_S20', data_filter_ext, Z_power_ext, allTraits, deepSplit = 4, minClusterSize = 20)
+# 4 SIGMA score version 
+SIGMA_nopower_ext_S20 = SIGMA_matrix[!rownames(SIGMA_matrix) %in% c('Prkcz','Camk2a'),!colnames(SIGMA_matrix) %in% c('Prkcz','Camk2a')]
+SIGMA_power_ext_S20 = SIGMA_nopower_ext_S20^power
+SIGMA_power_ext_S20 = XI_version('SIGMA_power_ext_S20', data_filter_ext, SIGMA_power_ext_S20, allTraits, deepSplit = 4, minClusterSize = 20)
 
 
 
@@ -482,23 +733,46 @@ draw_module_gprof <- function(name, COL) {
     }
 }
 
-for (COL in unique(ori_J1_EXT_power[[1]]$col)) {
+for (COL in unique(ori_EXT_power[[1]]$col)) {
 print(COL)
 gg = draw_module_gprof('ori_EXT_power_S15' , COL)
 }
 
-for (COL in unique(XI_J1_power_ext[[1]]$col)) {
+for (COL in unique(XI_power_ext[[1]]$col)) {
 print(COL)
 gg = draw_module_gprof('XI_power_ext_S15' , COL)
 }
 
-for (COL in unique(MAX_J1_power_ext[[1]]$col)) {
+for (COL in unique(MAX_power_ext[[1]]$col)) {
 print(COL)
 gg = draw_module_gprof('MAX_power_ext_S15' , COL)
 }
 
-for (COL in unique(JJ_J1_power_ext[[1]]$col)) {
+for (COL in unique(SIGMA_power_ext[[1]]$col)) {
 print(COL)
-gg = draw_module_gprof('Z_power_ext_S15' , COL)
+gg = draw_module_gprof('SIGMA_power_ext_S15' , COL)
 }
 
+
+
+
+
+for (COL in unique(ori_EXT_power_S20[[1]]$col)) {
+print(COL)
+gg = draw_module_gprof('ori_EXT_power_S20' , COL)
+}
+
+for (COL in unique(XI_power_ext_S20[[1]]$col)) {
+print(COL)
+gg = draw_module_gprof('XI_power_ext_S20' , COL)
+}
+
+for (COL in unique(MAX_power_ext_S20[[1]]$col)) {
+print(COL)
+gg = draw_module_gprof('MAX_power_ext_S20' , COL)
+}
+
+for (COL in unique(SIGMA_power_ext_S20[[1]]$col)) {
+print(COL)
+gg = draw_module_gprof('SIGMA_power_ext_S20' , COL)
+}

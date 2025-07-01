@@ -1,0 +1,104 @@
+wtUB
+wtUB
+tr_tr2
+wt_tr    13
+wt_yo    12
+Name: ID, dtype: int64
+pval_selec : 300
+final total : 316
+all together
+[(2, 34), (3, 948), (4, 18)]
+yoked only
+[(4, 8), (5, 461), (6, 516), (7, 15)]
+trained only
+[(2, 10), (3, 980), (4, 10)]
+         norm  centroid  ...     gene  candy
+0    3.685004 -1.502228  ...     Fmr1      O
+1    1.468950 -0.157453  ...    Calm1      X
+2    1.305756  1.301783  ...     Rhoc      X
+3    8.674170  5.241392  ...   Tm9sf1      X
+4    8.204152  6.381867  ...     Mea1      X
+..        ...       ...  ...      ...    ...
+311  8.055694 -4.480042  ...   Gm9598      X
+312  1.680904  1.635994  ...  Gm24095      X
+313  5.757069 -2.317589  ...  5S_rRNA      X
+314  5.932053  1.843759  ...      NaN      X
+315  7.800151 -5.826083  ...      NaN      X
+
+[316 rows x 9 columns]
+koLB
+koLB
+tr_tr2
+ko_tr    6
+ko_yo    6
+Name: ID, dtype: int64
+pval_selec : 384
+final total : 400
+all together
+[(3, 682), (4, 308), (5, 10)]
+yoked only
+[(7, 4), (8, 491), (9, 476), (10, 29)]
+trained only
+[(8, 606), (9, 382), (10, 12)]
+         norm  centroid  ...       gene  candy
+0    4.234979 -1.105530  ...      Ccnd2      X
+1    4.279778 -1.437409  ...       Gmpr      X
+2    4.593639 -0.326595  ...       Fmr1      O
+3    3.472687 -0.820100  ...      Pxmp4      X
+4    4.870051  2.101794  ...     Sec24b      X
+..        ...       ...  ...        ...    ...
+395  4.802047 -1.827507  ...    Gm50268      X
+396  4.521154  1.747989  ...    Gm24095      X
+397  3.592092  1.324903  ...    Gm25464      X
+398  8.012433  0.911205  ...        NaN      X
+399  5.137642  1.600426  ...  5_8S_rRNA      X
+
+[400 rows x 9 columns]
+koUB
+koUB
+tr_tr2
+ko_tr    6
+ko_yo    6
+Name: ID, dtype: int64
+pval_selec : 440
+final total : 456
+all together
+[(2, 2), (3, 992), (4, 6)]
+yoked only
+[(13, 3), (14, 484), (15, 505), (16, 8)]
+trained only
+[(5, 992), (6, 8)]
+         norm  centroid  ...     gene  candy
+0    4.009607 -0.541308  ...    Hddc2      X
+1    5.438914  0.027905  ...   Tom1l2      X
+2    3.243086 -0.448552  ...     Cd52      X
+3    1.715135 -1.359009  ...     Fmr1      O
+4    4.962786 -0.461497  ...    Pxmp4      X
+..        ...       ...  ...      ...    ...
+451  2.853780  1.384225  ...  5S_rRNA      X
+452  4.328008  1.592194  ...      NaN      X
+453  1.189360 -1.077354  ...      NaN      X
+454  8.126191  4.402265  ...      NaN      X
+455  4.579035  2.138976  ...  5S_rRNA      X
+
+[456 rows x 9 columns]
+onlyLB
+onlyLB
+tr_tr2
+ko_tr     6
+ko_yo     6
+wt_tr    13
+wt_yo    12
+Name: ID, dtype: int64
+pval_selec : 241
+final total : 257
+all together
+[(2, 921), (3, 79)]
+yoked only
+[(2, 3), (3, 997)]
+wo_tr only
+[(2, 1), (3, 746), (4, 253)]
+ko_tr only
+[(4, 9), (5, 342), (6, 595), (7, 54)]
+onlyLB
+onlyLB_comp1

@@ -289,6 +289,7 @@ np.random.seed(42)
 x = np.random.uniform(-10, 10, size=500)
 noise = np.random.uniform(-10, 10, size=500)
 
+# add_data = pd.read_csv('/Users/jiyeonhan/Dropbox/NYU_LIFE/Memory_ML/APA_PKMZ/APA_PKMZ07.DatasaurusDozen.tsv', sep='\t')
 add_data = pd.read_csv(datapath+'07.DatasaurusDozen.tsv', sep='\t')
 
 
@@ -409,8 +410,8 @@ for id, colname, renames in zip(ids, col_names, col_renames) :
     data_res.append(pcor)
     data_res.append(scor)
     for method in methods :
-        xi_1 = xi_cor(np.array(x_vals), np.array(y_vals), method)
-        xi_2 = xi_cor(np.array(y_vals), np.array(x_vals), method)
+        xi_1 = xi_cor2(np.array(x_vals), np.array(y_vals), method)
+        xi_2 = xi_cor2(np.array(y_vals), np.array(x_vals), method)
         data_res.append(max(xi_1, xi_2))
     scores.append(data_res)
     ax[id].scatter(x_vals, y_vals, alpha=0.25)

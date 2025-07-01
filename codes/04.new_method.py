@@ -31,8 +31,6 @@ from matplotlib.animation import FuncAnimation, PillowWriter
 
 
 
-
-
 datapath = './data/'
 plotpath = './figures/'
 
@@ -56,21 +54,19 @@ s_Sigma_t = r'$\tilde{\Sigma}$'
 
 
 
-
-
-def xi_cor(x, y, method):
+def xi_cor(x, y, method='dense'):
     n = len(x)
-    rank_x = stats.rankdata(x, method=method) # check rank
-    rank_y = stats.rankdata(y, method=method) # check rank 
-    sorted_rank_y = np.array([rank_y[i] for i in np.argsort(rank_x)]) # rerank according to x 
-    A = np.sum(np.abs(np.diff(sorted_rank_y)))
-    l = n + 1 - rank_y  
+    rank_x = stats.rankdata(x, method=method)
+    order = np.argsort(rank_x)
+    sorted_y = np.asarray(y)[order]
+    r_sorted_y = stats.rankdata(sorted_y, method=method)
+    A = np.sum(np.abs(np.diff(r_sorted_y)))
+    # tie-aware l_i 계산: 원시 Y에서 "Y_j >= Y_i"인 개수
+    l = np.array([np.sum(y >= yi) for yi in y]) #  
     D = 2 * np.sum(l * (n - l))
     xi = 1 - (n * A) / D
-    if xi >= 0 : 
-        return xi
-    else : 
-        return 0 
+    return float(np.clip(xi, 0.0, 1.0))
+
 
 
 ##### xi scaling function because of the small number of samples 
@@ -194,7 +190,7 @@ def XI_PC_sub_parallel(MY_LOG, MY_LOG_gene, method='dense'):
     SCOR, S_pv = stats.spearmanr(X_re, Y_re)
     # xi score 
     original_xi = xi_cor(X_re, Y_re, method)
-    new_xi = get_new_xi(14, original_xi)
+    new_xi = get_new_xi(n, original_xi)
     z_xi = original_xi / np.sqrt(0.4 / n) # xi ~ N(0,2/5n) 
     XI_pv = 1 - stats.norm.cdf(z_xi)  # one-side according to original paper
     # zeta score 2: using original xi vs using scaled xi
@@ -320,12 +316,12 @@ D_new, p_new = kstest(Z_total_new_filtered, 'rayleigh', args=(0, param_new[1]))
 
 # 
 print(f"[Original J] KS statistic = {D_ori:.4f}, p-value = {p_ori:.4f}")
-# KS stat : 0.12497660576090514
-# pval : 1.3336089300890033e-224
+# KS stat : 0.1250
+# pval : 0.0000
 
 print(f"[New J]      KS statistic = {D_new:.4f}, p-value = {p_new:.4f}")
-# KS stat : 0.12423695829443823
-# pval : 6.020518907360288e-222
+# KS stat : 0.1242
+# pval : 0.0000
 
 
 
@@ -431,6 +427,7 @@ g_g_df = pd.read_csv(datapath + '04.all_relationship.csv', index_col = 0)
 selected_gene = g_g_df[g_g_df.Z_pv<=0.05] # 702
 
 target_genes = list(np.unique(list(selected_gene.gene) + candidategenes)) # 714
+len(target_genes)
 from itertools import combinations
 gg_combi_list = list(combinations(target_genes, 2))
 # 254541
@@ -443,18 +440,33 @@ def XI_pair_sub_parallel(MY_LOG, geneA, geneB, method='dense'):
     n = len(X_re)
     # linear correlations
     PCOR, P_pv = stats.pearsonr(X_re, Y_re)
-    SCOR, S_pv = stats.spearmanr(X_re, Y_re)
-    # xi score 
+    SCOR, S_pv = stats.spearmanr(X_re, Y_re) 
+    PCOR2 = np.abs(PCOR)
+    SCOR2 = np.abs(SCOR)
+    if np.isnan(SCOR) :
+        SCOR2 = 0 
+        S_pv = 1 
+    if np.isnan(PCOR) :
+        PCOR2 = 0 
+        P_pv = 1 
+    #
     original_xi_A = xi_cor(X_re, Y_re, method)
     original_xi_B = xi_cor(Y_re, X_re, method)
     original_xi = max(original_xi_A, original_xi_B)
-    new_xi = get_new_xi(MY_LOG.shape[0], original_xi)
-    z_xi = original_xi / np.sqrt(0.4 / n) # xi ~ N(0,2/5n) 
+    new_xi = get_new_xi(n, original_xi)
+    z_xi = original_xi / np.sqrt(0.4 / n) # xi ~ N(0,2/5n)
     XI_pv = 1 - stats.norm.cdf(z_xi)  # one-side according to original paper
     # zeta score 2: using original xi vs using scaled xi
-    SIGMA_ori = np.sqrt(SCOR**2 + original_xi**2)
-    SIGMA = np.sqrt(SCOR**2 + new_xi**2)
-    z_Z, Z_pv = pval_zeta_rayleigh(original_xi, SCOR, n) # Z pvalue ~ Rayleigh 
+    SIGMA_ori = np.sqrt(SCOR2**2 + original_xi**2)
+    # if SCOR errors, it means all value same. that case, must make xicor also 0
+    if np.isnan(SCOR):
+        SIGMA = 0 
+        MAX_val = 0
+        Z_pv = 1 
+    else:
+        SIGMA = np.sqrt(SCOR2**2 + new_xi**2)
+        MAX_val = max(new_xi, SCOR2)
+        z_Z, Z_pv = pval_zeta_rayleigh(original_xi, SCOR2, n) # Z pvalue ~ Rayleigh 
     tmp = {
         'geneA'  : geneA,
         'geneB'  : geneB,
@@ -467,9 +479,13 @@ def XI_pair_sub_parallel(MY_LOG, geneA, geneB, method='dense'):
         'XI_pv' : XI_pv,
         'SIGMA_ori': SIGMA_ori,
         'SIGMA'  : SIGMA,
-        'Z_pv'  : Z_pv 
+        'Z_pv'  : Z_pv ,
+        'PCOR2' : PCOR2,
+        'SCOR2' : SCOR2,
+        'MAX' : MAX_val
     }
     return tmp
+
 
 
 results_pair = Parallel(n_jobs=10, backend="loky")(
@@ -477,18 +493,10 @@ results_pair = Parallel(n_jobs=10, backend="loky")(
 )
 
 results_pair_df = pd.DataFrame(results_pair)
-
-results_pair_df['SCOR2'] = np.abs(results_pair_df['SCOR'])
-
-max_check = []
-for i in tqdm(range(results_pair_df.shape[0])) :
-    max_check.append(max(results_pair_df.iloc[i]['XI_new'], results_pair_df.iloc[i]['SCOR2']))
-
-results_pair_df['MAX'] = max_check
-
 results_pair_df.to_csv(datapath + '04.all_relationship_GG.csv')
 
-# results_pair_df = pd.read_csv(datapath + '04.all_relationship_GG.csv', index_col = 0)
+## results_pair_df = pd.read_csv(datapath + '04.all_relationship_GG.csv', index_col = 0)
+
 
 
 
@@ -501,17 +509,8 @@ results_pair_yoked = Parallel(n_jobs=10, backend="loky")(
 )
 
 results_pair_yoked_df = pd.DataFrame(results_pair_yoked)
-results_pair_yoked_df['SCOR2'] = np.abs(results_pair_yoked_df['SCOR'])
-
-max_check = []
-for i in tqdm(range(results_pair_yoked_df.shape[0])) :
-    max_check.append(max(results_pair_yoked_df.iloc[i]['XI_new'], results_pair_yoked_df.iloc[i]['SCOR2']))
-
-results_pair_yoked_df['MAX'] = max_check
 
 results_pair_yoked_df.to_csv(datapath + '04.all_relationship_GG_YOKED.csv')
-
-
 
 
 
@@ -523,57 +522,14 @@ results_pair_trained = Parallel(n_jobs=10, backend="loky")(
 )
 
 results_pair_trained_df = pd.DataFrame(results_pair_trained)
-results_pair_trained_df['SCOR2'] = np.abs(results_pair_trained_df['SCOR'])
-
-max_check = []
-for i in tqdm(range(results_pair_trained_df.shape[0])) :
-    max_check.append(max(results_pair_trained_df.iloc[i]['XI_new'], results_pair_trained_df.iloc[i]['SCOR2']))
-
-results_pair_trained_df['MAX'] = max_check
 
 results_pair_trained_df.to_csv(datapath + '04.all_relationship_GG_TRAINED.csv')
 
 
-# No Train only 
-non_trained = RNA_DG[RNA_DG.PC1 < 0]
-
-
-results_pair_non_trained = Parallel(n_jobs=10, backend="loky")(
-    delayed(XI_pair_sub_parallel)(non_trained, geneA, geneB) for geneA, geneB in tqdm(gg_combi_list) 
-)
-
-results_pair_non_trained_df = pd.DataFrame(results_pair_non_trained)
-results_pair_non_trained_df['SCOR2'] = np.abs(results_pair_non_trained_df['SCOR'])
-
-max_check = []
-for i in tqdm(range(results_pair_non_trained_df.shape[0])) :
-    max_check.append(max(results_pair_non_trained_df.iloc[i]['XI_new'], results_pair_non_trained_df.iloc[i]['SCOR2']))
-
-results_pair_non_trained_df['MAX'] = max_check
-
-results_pair_non_trained_df.to_csv(datapath + '04.all_relationship_GG_NON_TRAINED.csv')
 
 
 
 
-
-# Yes Train only 
-yes_trained = RNA_DG[RNA_DG.PC1 > 0]
-
-results_pair_yes_trained = Parallel(n_jobs=10, backend="loky")(
-    delayed(XI_pair_sub_parallel)(yes_trained, geneA, geneB) for geneA, geneB in tqdm(gg_combi_list) 
-)
-
-results_pair_yes_trained_df = pd.DataFrame(results_pair_yes_trained)
-results_pair_yes_trained_df['SCOR2'] = np.abs(results_pair_yes_trained_df['SCOR'])
-
-max_check = []
-for i in tqdm(range(results_pair_yes_trained_df.shape[0])) :
-    max_check.append(max(results_pair_yes_trained_df.iloc[i]['XI_new'], results_pair_yes_trained_df.iloc[i]['SCOR2']))
-
-results_pair_yes_trained_df['MAX'] = max_check
-
-results_pair_yes_trained_df.to_csv(datapath + '04.all_relationship_GG_YES_TRAINED.csv')
 
 
 
@@ -636,7 +592,7 @@ def graph_process(data, out_filename: str, n_iter: int = 1000, n_jobs: int = Non
 
 
 n_iter = 1000
-n_iter = 10
+#n_iter = 10
 n_jobs = min(8, os.cpu_count())
 
 datasets_1 = [
@@ -646,10 +602,6 @@ datasets_1 = [
     ('04.all_relationship_GG_YOKED.csv', '04.Louvain_1_iter1000_Yoked.csv'),
     # Trained only dataset
     ('04.all_relationship_GG_TRAINED.csv', '04.Louvain_1_iter1000_Trained.csv'),
-    # NO only 
-    ('04.all_relationship_GG_NON_TRAINED.csv', '04.Louvain_1_iter1000_NON_trained.csv'),
-    # YES only 
-    ('04.all_relationship_GG_YES_TRAINED.csv', '04.Louvain_1_iter1000_YES_trained.csv'),
 ]
 
 for data in datasets_1 :
@@ -660,20 +612,13 @@ for data in datasets_1 :
 
 
 # total merged 
-# 1000 iter : [(3, 64), (4, 922), (5, 14)]
+# final : [(3, 64), (4, 922), (5, 14)]
 
-# yoked only 
-# 1000 iter : [(9, 231), (10, 717), (11, 52)] 
+# Yoked
+# final : [(9, 231), (10, 717), (11, 52)]
 
-# trained only 
-# 1000 iter : [(32, 72), (30, 18), (31, 910)] # something happening 
-
-# NON-trained
-# 1000 : [(4, 4), (5, 555), (6, 434), (7, 7)]
-
-# YES-trained 
-# 1000 : [(44, 61), (45, 620), (46, 319)] 
-
+# Trained only
+# [(30, 20), (31, 908), (32, 72)]
 
 
 
@@ -739,37 +684,65 @@ def get_RGB(df, min_brightness=0.3): # too dark if all black
 
 
 # re read data 
+
 clust_all = pd.read_csv(datapath + '04.Louvain_1_iter1000.csv', index_col = 0)
 clust_Yoked = pd.read_csv(datapath + '04.Louvain_1_iter1000_Yoked.csv', index_col = 0)
 clust_Trained = pd.read_csv(datapath + '04.Louvain_1_iter1000_Trained.csv', index_col = 0)
-
-clust_NO = pd.read_csv(datapath + '04.Louvain_1_iter1000_NON_trained.csv', index_col = 0)
-clust_YES = pd.read_csv(datapath + '04.Louvain_1_iter1000_YES_trained.csv', index_col = 0)
-
-
 
 genes = list(clust_all.index)
 for i in genes :
     clust_all.at[i,i] = 1
     clust_Yoked.at[i,i] = 1
     clust_Trained.at[i,i] = 1
-    clust_NO.at[i,i] = 1
-    clust_YES.at[i,i] = 1
 
 
-pca_all = PCA(n_components=3)
+
+
+pca_all = PCA() # 
+scores_all = pca_all.fit_transform(clust_all) 
+
+# PC spectrum check 
+evs = pca_all.explained_variance_ # 각 eigenvalue 고윳값 
+evr = pca_all.explained_variance_ratio_     # 각 PC의 분산 비율
+
+pcs = np.arange(1, len(evs)+1)
+
+num_lim = 10 
+fig, axes = plt.subplots(ncols = 2, nrows = 1, figsize= (8,3))
+axes[0].plot(pcs[0:num_lim], evs[0:num_lim], 'o-')
+axes[0].set_xticks(pcs[0:num_lim])
+axes[0].set_xlabel('PC')
+axes[0].set_ylabel('Eigenvalue')
+axes[0].grid(axis = 'y')
+
+
+axes[1].bar(pcs[0:num_lim], evr[0:num_lim], alpha=0.6)
+axes[1].plot(pcs[0:num_lim], np.cumsum(evr)[0:num_lim], 'r--', marker='o', label='Cumulative')
+axes[1].set_xticks(pcs[0:num_lim])
+axes[1].set_xlabel('PC')
+axes[1].set_ylabel('Variance Ratio')
+axes[1].grid(axis = 'y')
+
+plt.tight_layout()
+plt.savefig(plotpath+'04.Cluster_PC_spectrum.png', dpi = 300)
+plt.savefig(plotpath+'04.Cluster_PC_spectrum.eps', dpi = 300)
+plt.savefig(plotpath+'04.Cluster_PC_spectrum.pdf', dpi = 300)
+
+
+
+pca_all = PCA(n_components=3) # 
 scores_all = pca_all.fit_transform(clust_all) 
 
 scores_YOKED  = pca_all.transform(clust_Yoked)
 scores_TRAINED  = pca_all.transform(clust_Trained)
-scores_NO  = pca_all.transform(clust_NO)
-scores_YES  = pca_all.transform(clust_YES)
+
+
+
+
 
 scores_all_df = pd.DataFrame(scores_all, index = list(clust_all.index), columns = ['R','G','B'])
 scores_Yo_df = pd.DataFrame(scores_YOKED, index = list(clust_Yoked.index), columns = ['R','G','B'])
 scores_Tr_df = pd.DataFrame(scores_TRAINED, index = list(clust_Trained.index), columns = ['R','G','B'])
-scores_No_df = pd.DataFrame(scores_NO, index = list(clust_NO.index), columns = ['R','G','B'])
-scores_Ys_df = pd.DataFrame(scores_YES, index = list(clust_YES.index), columns = ['R','G','B'])
 
 
 scores_Yo_df2 = get_RGB(scores_Yo_df)
@@ -779,12 +752,9 @@ scores_Tr_df_colchange = copy.deepcopy(scores_Tr_df)
 scores_Tr_df_colchange['G'] = 1-scores_Tr_df_colchange['G']
 
 scores_Tr_df2 = get_RGB(scores_Tr_df_colchange)
-scores_No_df2 = get_RGB(scores_No_df)
-scores_Ys_df2 = get_RGB(scores_Ys_df)
 
 
 col_train = list(scores_Tr_df2.hex_val)
-col_yes = list(scores_Ys_df2.hex_val)
 
 
 def plot_3d_rgb (this_df, R_ratio, G_ratio, B_ratio) : 
@@ -801,6 +771,8 @@ def plot_3d_rgb (this_df, R_ratio, G_ratio, B_ratio) :
             c=row['hex_val'],
             marker='d',  # diamond
             s=50,
+            linewidth=0.5,
+            edgecolor='black',
             alpha=0.7,
             label='Candigene'
         )
@@ -814,6 +786,8 @@ def plot_3d_rgb (this_df, R_ratio, G_ratio, B_ratio) :
         c=this_df.loc[mask_not_candy, 'hex_val'],
         marker='o',  # circle
         s=30,
+        linewidth=0,
+        edgecolor='None',
         alpha=0.5,
         label='X'
     )
@@ -827,8 +801,6 @@ def plot_3d_rgb (this_df, R_ratio, G_ratio, B_ratio) :
 
 plot_3d_rgb(scores_Yo_df2, pca_all.explained_variance_ratio_[0], pca_all.explained_variance_ratio_[1], pca_all.explained_variance_ratio_[2])
 plot_3d_rgb(scores_Tr_df2, pca_all.explained_variance_ratio_[0], pca_all.explained_variance_ratio_[1], pca_all.explained_variance_ratio_[2])
-plot_3d_rgb(scores_No_df2, pca_all.explained_variance_ratio_[0], pca_all.explained_variance_ratio_[1], pca_all.explained_variance_ratio_[2])
-plot_3d_rgb(scores_Ys_df2, pca_all.explained_variance_ratio_[0], pca_all.explained_variance_ratio_[1], pca_all.explained_variance_ratio_[2])
 
 
 # with original PC values
@@ -1000,10 +972,6 @@ def save_transition_gif(scores_start, scores_end, colors, gene_list, candidatege
 save_transition_gif(np.array(scores_Yo_df2[['R','G','B']]), np.array(scores_Tr_df2[['R','G','B']]), col_train, list(scores_Tr_df2.index), candidategenes,
                     output_path=plotpath+'04.PCall_yotr.gif')
 
-save_transition_gif(np.array(scores_No_df2[['R','G','B']]), np.array(scores_Ys_df2[['R','G','B']]), col_yes, list(scores_No_df2.index), candidategenes,
-                    output_path=plotpath+'04.PCall_noyes.gif')
-
-
 
 
 
@@ -1033,24 +1001,18 @@ clust_all = pd.read_csv(datapath + '04.Louvain_1_iter1000.csv', index_col = 0)
 clust_Yoked = pd.read_csv(datapath + '04.Louvain_1_iter1000_Yoked.csv', index_col = 0)
 clust_Trained = pd.read_csv(datapath + '04.Louvain_1_iter1000_Trained.csv', index_col = 0)
 
-clust_NO = pd.read_csv(datapath + '04.Louvain_1_iter1000_NON_trained.csv', index_col = 0)
-clust_YES = pd.read_csv(datapath + '04.Louvain_1_iter1000_YES_trained.csv', index_col = 0)
-
 genes = list(clust_all.index)
 for i in genes :
     clust_all.at[i,i] = 1
     clust_Yoked.at[i,i] = 1
     clust_Trained.at[i,i] = 1
-    clust_NO.at[i,i] = 1
-    clust_YES.at[i,i] = 1
 
 
 matrices = {
     'all': clust_all,
     'Yoked': clust_Yoked,
     'Trained': clust_Trained,
-    'NO': clust_NO,
-    'YES': clust_YES,
+
 }
 
 
@@ -1076,13 +1038,10 @@ def plot_clustermap(matrix, filename, vmin=0, vmax=1, center=None, cmap='Blues',
 
 plot_clustermap(clust_Yoked, '04.clustermap_YOKED', candy_labels=candidategenes)
 plot_clustermap(clust_Trained, '04.clustermap_Trained', candy_labels=candidategenes)
-plot_clustermap(clust_NO, '04.clustermap_NO', candy_labels=candidategenes)
-plot_clustermap(clust_YES, '04.clustermap_YES', candy_labels=candidategenes)
 
 
 diffs = {
     'TR_min_YO': clust_Trained - clust_Yoked,
-    'YES_min_NO': clust_YES - clust_NO
 }
 
 
@@ -1160,7 +1119,7 @@ res_1000 = res[(res.term_size <5000) & (res.term_size >5)]
 res_1000['pval'] = -np.log10(res_1000['p_value'])
 res_1000['perc'] = np.round((res_1000['intersection_size'] / res_1000['term_size'] ) * 100,2)
 
-plt.figure(figsize=(7,3))
+plt.figure(figsize=(7,6))
 sns.barplot(
     x='pval',
     y='name',
@@ -1427,8 +1386,10 @@ for i in range(len(perplexities)):
             CandyO['comp1'], CandyO['comp2'],
             c=CandyO['norm_col'],
             marker='d',
-            s=CandyO['norm'] * 5,
-            alpha=0.7
+            s=CandyO['norm'] * 10,
+            alpha=0.9,
+            linewidths = 0,
+            edgecolors = None
         )
         for gene, row in CandyO.iterrows():
             ax.text(row['comp1'], row['comp2'], gene, fontsize=10, ha='center')
@@ -1438,8 +1399,10 @@ for i in range(len(perplexities)):
             CandyX['comp1'], CandyX['comp2'],
             c=CandyX['norm_col'],
             marker='o',
-            s=CandyX['norm'] * 5,
-            alpha=0.4
+            s=CandyX['norm'] * 10,
+            alpha=0.6,
+            linewidths = 0,
+            edgecolors = None
         )
         ax.set_title(f"perp={perplexities[i]}, rs={random_states[j]}")
         ax.set_xticks([]); ax.set_yticks([])
@@ -1463,8 +1426,10 @@ for i in range(len(perplexities)):
             candyO['comp1'], candyO['comp2'],
             c=candyO['hex_val'],
             marker='d',
-            s=candyO['norm'] * 5,
-            alpha=0.7
+            s=candyO['norm'] * 10,
+            alpha=0.9,
+            linewidths = 0,
+            edgecolors = None
         )
         for gene, row in candyO.iterrows():
             ax.text(row['comp1'], row['comp2'], gene, fontsize=10, ha='center')
@@ -1473,8 +1438,10 @@ for i in range(len(perplexities)):
             candyX['comp1'], candyX['comp2'],
             c=candyX['hex_val'],
             marker='o',
-            s=candyX['norm'] * 5,
-            alpha=0.4
+            s=candyX['norm'] * 10,
+            alpha=0.6,
+            linewidths = 0,
+            edgecolors = None
         )
         ax.set_title(f"perp={perplexities[i]}, rs={random_states[j]}")
         ax.set_xticks([]); ax.set_yticks([])
@@ -1488,8 +1455,61 @@ plt.close(fig2)
 
 
 
-# Save only one with specific color 
 
+
+
+
+
+def tsne_plot(random_state, perplexity, t_X) : 
+    tsne_reducer = TSNE(n_components=2, perplexity=perplexity, random_state=random_state)
+    X_2d = tsne_reducer.fit_transform(t_X)
+    df2d = pd.DataFrame(X_2d, index=genes, columns=['comp1', 'comp2'])
+    df2d['candy'] = t_y.values
+    df2d['norm'] = top_all['norm'].values
+    norm_min, norm_max = df2d['norm'].min(), df2d['norm'].max()
+    cmap = plt.get_cmap('viridis')
+    df2d['norm_col'] = list(cmap((df2d['norm'] - norm_min) / (norm_max - norm_min)))
+    #
+    fig, axs = plt.subplots(1, 1, figsize=(4, 4))
+    # candy=='O'
+    CandyO = df2d[df2d['candy'] == 'O']
+    axs.scatter(
+        CandyO['comp1'], CandyO['comp2'],
+        c=CandyO['norm_col'],
+        marker='d',
+        s=CandyO['norm'] * 5,
+        alpha=0.7
+    )
+    for gene, row in CandyO.iterrows():
+        axs.text(row['comp1'], row['comp2'], gene, fontsize=10, ha='center')
+    # candy=='X'
+    CandyX = df2d[df2d['candy'] == 'X']
+    axs.scatter(
+        CandyX['comp1'], CandyX['comp2'],
+        c=CandyX['norm_col'],
+        marker='o',
+        s=CandyX['norm'] * 5,
+        alpha=0.4
+    )
+    axs.set_title(f"random_state={random_state}, perplexity={perplexity}")
+    axs.set_xticks([]); axs.set_yticks([])
+    plt.show()
+
+
+tsne_plot(42, 60, t_X)
+
+tsne_plot(30, 70, t_X)
+
+
+
+
+
+
+
+
+
+# Save only one with specific color 
+# used the custom color for ToC figure, however, journal figure will use default color 
 
 import matplotlib.cm as cm
 
@@ -1498,32 +1518,38 @@ def TSNE_final (TSNE_select, col_select) :
     col_min = TSNE_select[col_select].min()
     col_max = TSNE_select[col_select].max()
     norm = mcolors.Normalize(vmin=col_min, vmax=col_max)
-    cmap = cm.get_cmap('viridis')
-    sm = cm.ScalarMappable(cmap=cmap, norm=norm)
+    #custom_colors = [ '#404040', '#f4a582', '#ca0020'] 
+    custom_colors = [ '#440154', '#31688e', '#21918c', '#35b779','#fde725'] 
+    custom_cmap = LinearSegmentedColormap.from_list("custom_cmap", custom_colors, N=256)
+    sm = cm.ScalarMappable(cmap=custom_cmap, norm=norm)
     sm.set_array([])  # 
     #
     fig, ax = plt.subplots(figsize=(10, 6))
     mask_not_candy = TSNE_select['candy'] == 'X'
     for index, row in TSNE_select.loc[mask_not_candy].iterrows():
-        color = cmap((row[col_select] - col_min) / (col_max - col_min))
+        color = custom_cmap((row[col_select] - col_min) / (col_max - col_min))
         ax.scatter(
             row['comp1'],
             row['comp2'],
             color=color,
-            marker='o',  
-            s=40,
-            alpha=0.4,
+            marker='o', 
+            edgecolor=None,
+            linewidth=0, 
+            s=70,
+            alpha=0.5,
             label='NO'
         )
     mask_candy = TSNE_select['candy'] == 'O'
     for index, row in TSNE_select.loc[mask_candy].iterrows():
-        color = cmap((row[col_select] - col_min) / (col_max - col_min))
+        color = custom_cmap((row[col_select] - col_min) / (col_max - col_min))
         ax.scatter(
             row['comp1'],
             row['comp2'],
             color=color,
             marker='d',  #
-            s=40,  # 
+            s=80,  # 
+            edgecolor=None,
+            linewidth=2,
             alpha=0.7,
             label='Candigene'
         )
@@ -1543,6 +1569,17 @@ TSNE_select = tsne_results[1][1]
 TSNE_final(TSNE_select, 'norm')
 TSNE_final(TSNE_select, 'cent_sim')
 TSNE_final(TSNE_select, 'gene_sim')
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1568,12 +1605,14 @@ for i, n_neighbor in enumerate(n_neighbors):
         df2d['gene_sim'] = top_all['gene_sim'].values
         df2d['hex_val'] = top_all['hex_val'].values
         #
-        # 
         norm_min, norm_max = df2d['norm'].min(), df2d['norm'].max()
-        cmap = plt.get_cmap('viridis')
-        df2d['norm_col'] = list(cmap((df2d['norm'] - norm_min) / (norm_max - norm_min)))
+        #custom_colors = [ '#404040', '#f4a582', '#ca0020'] 
+        custom_colors = [ '#440154', '#31688e', '#21918c', '#35b779','#fde725'] 
+        custom_cmap = LinearSegmentedColormap.from_list("custom_cmap", custom_colors, N=256)
+        df2d['norm_col'] = list(custom_cmap((df2d['norm'] - norm_min) / (norm_max - norm_min)))
         #
         umap_results[i][j] = df2d
+
 
 
 
@@ -1589,8 +1628,10 @@ for i in range(len(n_neighbors)):
             CandyO['comp1'], CandyO['comp2'],
             c=CandyO['norm_col'],
             marker='d',
-            s=CandyO['norm'] * 5,
-            alpha=0.7
+            s=CandyO['norm'] * 10,
+            alpha=0.9,
+            linewidths = 0,
+            edgecolors = None
         )
         for gene, row in CandyO.iterrows():
             ax.text(row['comp1'], row['comp2'], gene, fontsize=10, ha='center')
@@ -1600,8 +1641,10 @@ for i in range(len(n_neighbors)):
             CandyX['comp1'], CandyX['comp2'],
             c=CandyX['norm_col'],
             marker='o',
-            s=CandyX['norm'] * 5,
-            alpha=0.4
+            s=CandyX['norm'] * 10,
+            alpha=0.6,
+            linewidths = 0,
+            edgecolors = None
         )
         ax.set_title(f"n_neigh={n_neighbors[i]}, min_dist={min_dists[j]}")
         ax.set_xticks([]); ax.set_yticks([])
@@ -1625,8 +1668,10 @@ for i in range(len(n_neighbors)):
             candyO['comp1'], candyO['comp2'],
             c=candyO['hex_val'],
             marker='d',
-            s=candyO['norm'] * 5,
-            alpha=0.7
+            s=candyO['norm'] * 10,
+            alpha=0.9,
+            linewidths = 0,
+            edgecolors = None
         )
         for gene, row in candyO.iterrows():
             ax.text(row['comp1'], row['comp2'], gene, fontsize=10, ha='center')
@@ -1635,8 +1680,10 @@ for i in range(len(n_neighbors)):
             candyX['comp1'], candyX['comp2'],
             c=candyX['hex_val'],
             marker='o',
-            s=candyX['norm'] * 5,
-            alpha=0.4
+            s=candyX['norm'] * 10,
+            alpha=0.6,
+            linewidths = 0,
+            edgecolors = None
         )
         ax.set_title(f"n_neigh={n_neighbors[i]}, min_dist={min_dists[j]}")
         ax.set_xticks([]); ax.set_yticks([])
@@ -1647,6 +1694,58 @@ plt.savefig(os.path.join(plotpath, '04.umap_hex_col.png'), dpi=300)
 plt.savefig(os.path.join(plotpath, '04.umap_hex_col.eps'), dpi=300)
 plt.savefig(os.path.join(plotpath, '04.umap_hex_col.pdf'), dpi=300)
 plt.close(fig2)
+
+
+
+
+
+def umap_plot(random_state, n_neighbors, min_dist, t_X) : 
+    umap_reducer = UMAP(n_components = 2, random_state = random_state, n_neighbors=n_neighbors, min_dist=min_dist, metric='euclidean')
+    X_2d = umap_reducer.fit_transform(t_X)
+    df2d = pd.DataFrame(X_2d, index=genes, columns=['comp1', 'comp2'])
+    df2d['candy'] = t_y.values
+    df2d['norm'] = top_all['norm'].values
+    norm_min, norm_max = df2d['norm'].min(), df2d['norm'].max()
+    #custom_colors = [ '#404040', '#f4a582', '#ca0020'] 
+    custom_colors = [ '#440154', '#31688e', '#21918c', '#35b779','#fde725'] 
+    custom_cmap = LinearSegmentedColormap.from_list("custom_cmap", custom_colors, N=256)
+    df2d['norm_col'] = list(custom_cmap((df2d['norm'] - norm_min) / (norm_max - norm_min)))
+    #
+    fig, axs = plt.subplots(1, 1, figsize=(4, 4))
+    # candy=='O'
+    CandyO = df2d[df2d['candy'] == 'O']
+    axs.scatter(
+        CandyO['comp1'], CandyO['comp2'],
+        c=CandyO['norm_col'],
+        marker='d',
+        s=CandyO['norm'] * 5,
+        alpha=0.7
+    )
+    for gene, row in CandyO.iterrows():
+        axs.text(row['comp1'], row['comp2'], gene, fontsize=10, ha='center')
+    # candy=='X'
+    CandyX = df2d[df2d['candy'] == 'X']
+    axs.scatter(
+        CandyX['comp1'], CandyX['comp2'],
+        c=CandyX['norm_col'],
+        marker='o',
+        s=CandyX['norm'] * 5,
+        alpha=0.4
+    )
+    axs.set_title(f"n_neigh={n_neighbors}, min_dist={min_dist}")
+    axs.set_xticks([]); axs.set_yticks([])
+    plt.show()
+
+
+umap_plot(64, 30, 0.5, t_X) 
+umap_plot(20, 30, 0.5, t_X) 
+umap_plot(200, 30, 0.5, t_X) 
+
+
+
+
+
+
 
 
 
@@ -2045,6 +2144,88 @@ for cond in conditions:
         print(f"  {vA} vs {vB}:  " +
               ", ".join([f"PC{i+1}={cos_vals[i]:.4f}" for i in range(3)]))
 
+
+
+
+
+
+
+
+
+
+# 그냥 correlation 가지고 그려보는건 어떤지 한번만 확인해보기 
+# 근데 내가 보기엔, 우리가 색을 칠해놔서 저렇게 차이가 보이는거지, 
+# clustering prob 안쓰면 저런거 안보일 것 같음 
+
+
+
+
+# Load data and ensure symmetry by making geneA and geneB interchangeable
+results_pair_all_df = pd.read_csv(datapath + '04.all_relationship_GG.csv', index_col = 0)
+results_pair_yoked_df = pd.read_csv(datapath + '04.all_relationship_GG_YOKED.csv', index_col = 0)
+results_pair_trained_df = pd.read_csv(datapath + '04.all_relationship_GG_TRAINED.csv', index_col = 0)
+
+raw_pca_df = correlation_pca_plot2(results_pair_all_df, '04.RAW_Correlation_PC_all')
+correlation_pca_plot2(results_pair_yoked_df, '04.RAW_Correlation_PC_yoked')
+correlation_pca_plot2(results_pair_trained_df, '04.RAW_Correlation_PC_trained')
+
+
+
+col_val = scores_Tr_df2[['hex_val']]
+# col_val.to_csv(datapath + '04.TRAIN_color_val.csv')
+
+def correlation_pca_plot2(input_df, name) : 
+    a = input_df[['geneA','geneB','SIGMA']]
+    b = input_df[['geneB','geneA','SIGMA']]
+    a.columns = ['A','B','SIGMA']
+    b.columns = ['A','B','SIGMA']
+    df_tmp = pd.concat([a,b])
+    df_tmp_sym = df_tmp.pivot(index = 'A', columns = 'B', values = 'SIGMA')
+    df_tmp_sym.fillna(1, inplace = True)
+    #
+    pca_all = PCA()
+    scores_all = pca_all.fit_transform(df_tmp_sym) 
+    evs = pca_all.explained_variance_ # 각 eigenvalue 고윳값 
+    evr = pca_all.explained_variance_ratio_     # 각 PC의 분산 비율
+    pcs = np.arange(1, len(evs)+1)
+    scores_all_df = pd.DataFrame(data=scores_all, index = list(df_tmp_sym.index))
+    PC_df = pd.DataFrame(data=scores_all_df, columns=[0,1])
+    # 
+    num_lim = 10
+    fig, axes = plt.subplots(ncols = 2, nrows = 1, figsize= (6, 3))
+    #
+    axes[0].bar(pcs[0:num_lim], evr[0:num_lim], alpha=0.6)
+    axes[0].plot(pcs[0:num_lim], np.cumsum(evr)[0:num_lim], 'r--', marker='o', label='Cumulative')
+    axes[0].set_xticks(pcs[0:num_lim])
+    axes[0].set_xlabel('PC')
+    axes[0].set_ylabel('Variance Ratio')
+    axes[0].grid(axis = 'y')
+    axes[0].legend()
+    #
+    PC_df['hex_val'] = col_val['hex_val'][PC_df.index].values
+    axes[1].scatter(PC_df[0], PC_df[1], alpha=0.8, c = PC_df['hex_val'], edgecolors = None, linewidths = 0, s = 20)
+    axes[1].set_xlabel('PC 1')
+    axes[1].set_ylabel('PC 2')
+    axes[1].grid(True)
+    #
+    plt.tight_layout()
+    plt.savefig(plotpath+name+'_'+'04.Correlation_PC_spectrum.png', dpi = 300)
+    plt.savefig(plotpath+name+'_'+'04.Correlation_PC_spectrum.eps', dpi = 300)
+    plt.savefig(plotpath+name+'_'+'04.Correlation_PC_spectrum.pdf', dpi = 300)
+    #
+    # fig3d = plt.figure()
+    # ax3d = fig3d.add_subplot(111, projection='3d')
+    # scores_all_df['hex_val'] = col_val['hex_val'][scores_all_df.index].values
+    # ax3d.scatter(scores_all_df[0], scores_all_df[1], scores_all_df[2], alpha=0.5, c = scores_all_df['hex_val'])
+    # ax3d.set_xlabel('PC 1')
+    # ax3d.set_ylabel('PC 2')
+    # ax3d.set_zlabel('PC 3')
+    # ax3d.grid(True)
+    # plt.show()
+    return scores_all_df
+
+
+train_df_res = correlation_pca_plot(results_pair_trained_df, '04.RAW_Correlation_PC_trained')
 
 
 

@@ -1,0 +1,222 @@
+wtLB
+wtLB
+tr_tr2
+wt_tr    13
+wt_yo    13
+Name: ID, dtype: int64
+pval_selec : 538
+final total : 552
+all together
+[(3, 937), (4, 63)]
+yoked only
+[(3, 940), (4, 60)]
+trained only
+[(3, 957), (4, 43)]
+          norm   centroid  ...      gene  candy
+0     3.323023   2.119901  ...      Cav2      X
+1     2.112990   0.117263  ...     Gna12      X
+2    10.000938   7.069923  ...     Ccnd2      X
+3     8.447094  -7.801207  ...    Btbd17      X
+4     9.596501  -8.254089  ...     Mkrn2      X
+..         ...        ...  ...       ...    ...
+547  12.169678  10.724795  ...    Gm7773      X
+548   8.478891  -7.826599  ...  Rpsa-ps7      X
+549  11.395691  10.086983  ...   Gm32282      X
+550   9.178837   0.447141  ...    Gm6402      X
+551  10.553043   0.605574  ...   Gm25235      X
+
+[552 rows x 9 columns]
+wtUB
+wtUB
+tr_tr2
+wt_tr    13
+wt_yo    13
+Name: ID, dtype: int64
+pval_selec : 480
+final total : 496
+all together
+[(2, 2), (3, 547), (4, 451)]
+yoked only
+[(4, 998), (5, 2)]
+trained only
+[(3, 665), (4, 329), (5, 6)]
+         norm  centroid  ...     gene  candy
+0    6.809884  1.848321  ...     Narf      X
+1    4.923458 -4.569664  ...     Fmr1      O
+2    4.522898 -0.876242  ...   Agpat3      X
+3    6.897391  1.782782  ...    Tulp3      X
+4    2.128241  0.320044  ...    Mov10      X
+..        ...       ...  ...      ...    ...
+491  6.205411  1.823812  ...  Gm25328      X
+492  1.683255  0.114576  ...       U6      X
+493  1.760852  0.022380  ...      NaN      X
+494  1.704103  0.112708  ...      NaN      X
+495  1.522229  0.213214  ...      7SK      X
+
+[496 rows x 9 columns]
+koLB
+koLB
+tr_tr2
+ko_tr    6
+ko_yo    6
+Name: ID, dtype: int64
+pval_selec : 431
+final total : 447
+all together
+[(3, 984), (4, 16)]
+yoked only
+[(8, 1), (9, 285), (10, 695), (11, 19)]
+trained only
+[(9, 159), (10, 822), (11, 19)]
+         norm  centroid  ...     gene  candy
+0    6.347094  3.029973  ...    Itgb2      X
+1    7.003006  3.202711  ...     Fmr1      O
+2    6.812014  3.218091  ...   Heatr6      X
+3    3.790122  1.156957  ...   Wfdc18      X
+4    4.150552  0.073335  ...    Itfg2      X
+..        ...       ...  ...      ...    ...
+442  4.577208  2.613271  ...   Gm5497      X
+443  3.070323 -0.554523  ...      NaN      X
+444  4.516900  4.476693  ...  Gm50335      X
+445  3.757743  0.330522  ...  Gm24539      X
+446  4.818656  4.660713  ...      NaN      X
+
+[447 rows x 9 columns]
+koUB
+koUB
+tr_tr2
+ko_tr    6
+ko_yo    6
+Name: ID, dtype: int64
+pval_selec : 288
+final total : 304
+all together
+[(2, 11), (3, 966), (4, 23)]
+yoked only
+[(6, 179), (7, 558), (8, 252), (9, 11)]
+trained only
+[(11, 2), (12, 441), (13, 551), (14, 6)]
+         norm  centroid  ...      gene  candy
+0    2.168564 -1.487527  ...      Fmr1      O
+1    3.834919 -2.197993  ...     Adprh      X
+2    1.215396 -0.816698  ...  Pafah1b2      X
+3    1.216810 -0.820536  ...     Foxj2      X
+4    4.254235 -3.830329  ...     Mob3a      X
+..        ...       ...  ...       ...    ...
+299  2.851906 -2.464078  ...       NaN      X
+300  3.968489  1.372875  ...   5S_rRNA      X
+301  5.442222  4.991439  ...       NaN      X
+302  1.789881  0.618900  ...       NaN      X
+303  1.512904  1.441521  ...       NaN      X
+
+[304 rows x 9 columns]
+onlyLB
+onlyLB
+tr_tr2
+ko_tr     6
+ko_yo     6
+wt_tr    13
+wt_yo    13
+Name: ID, dtype: int64
+pval_selec : 251
+final total : 267
+all together
+[(3, 927), (4, 73)]
+yoked only
+[(3, 571), (4, 429)]
+wo_tr only
+[(3, 885), (4, 115)]
+ko_tr only
+[(6, 5), (7, 320), (8, 536), (9, 137), (10, 2)]
+onlyLB
+onlyLB_comp1
+onlyLB_comp2
+onlyUB
+onlyUB
+tr_tr2
+ko_tr     6
+ko_yo     6
+wt_tr    13
+wt_yo    13
+Name: ID, dtype: int64
+pval_selec : 306
+final total : 322
+all together
+[(2, 1000)]
+yoked only
+[(2, 190), (3, 810)]
+wo_tr only
+[(2, 1), (3, 968), (4, 31)]
+ko_tr only
+[(7, 28), (8, 812), (9, 158), (10, 2)]
+onlyUB
+onlyUB_comp1
+onlyUB_comp2
+LByoked
+LByoked
+tr_tr2
+ko_yo     6
+wt_yo    13
+Name: ID, dtype: int64
+pval_selec : 255
+final total : 270
+all together
+[(3, 374), (4, 626)]
+wo_yo only
+[(2, 15), (3, 985)]
+ko_yo only
+[(3, 2), (4, 460), (5, 531), (6, 7)]
+UByoked
+UByoked
+tr_tr2
+ko_yo     6
+wt_yo    13
+Name: ID, dtype: int64
+pval_selec : 816
+final total : 832
+all together
+[(2, 2), (3, 998)]
+wo_yo only
+[(3, 998), (4, 2)]
+ko_yo only
+[(3, 40), (4, 592), (5, 368)]
+onlyLB2
+onlyLB2
+tr_tr2
+ko_tr     6
+ko_yo     6
+wt_tr    13
+wt_yo    13
+Name: ID, dtype: int64
+pval_selec : 251
+final total : 267
+all together
+[(3, 927), (4, 73)]
+wo_yo only
+[(2, 2), (3, 992), (4, 6)]
+wo_tr only
+[(3, 885), (4, 115)]
+ko only
+[(4, 184), (5, 665), (6, 150), (7, 1)]
+onlyLB2_comp3
+onlyLB2_comp4
+onlyUB2
+onlyUB2
+tr_tr2
+ko_tr     6
+ko_yo     6
+wt_tr    13
+wt_yo    13
+Name: ID, dtype: int64
+pval_selec : 306
+final total : 322
+all together
+[(2, 1000)]
+wo_yo only
+[(2, 5), (3, 794), (4, 201)]
+wo_tr only
+[(2, 1), (3, 968), (4, 31)]
+ko only
+[(3, 51), (4, 810), (5, 139)]
+onlyUB2_comp3
+onlyUB2_comp4
