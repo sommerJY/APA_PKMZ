@@ -1,8 +1,4 @@
 
-datapath = './data/'
-plotpath = './figures/'
-
-
 library(DESeq2) ## for gene expression analysis
 library(png)
 library(tidyverse) # for dataframe 
@@ -20,18 +16,30 @@ library(gplots)
 library(ggplot2)
 
 
-font_add("Arial", regular = "C:/Windows/Fonts/arial.ttf")  # or mac path
+if (.Platform$OS.type == "windows") {
+  font_add("Arial", regular = "C:/Windows/Fonts/arial.ttf")
+} else {
+  font_add("Arial", regular = "/Library/Fonts/Arial.ttf")
+}
+
 showtext_auto()
 
 # Most codes from Rayna Harris github : https://github.com/raynamharris/IntegrativeProjectWT2015
+
+
+
+datapath = './data/'
+plotpath = './figures/'
+
+
 
 # Prep col data,
 outliers <- c("146D-DG-3", "145A-CA3-2", "146B-DG-2", "146D-CA1-3", "148B-CA1-4") # pre-defined outliers
 
 colData <- read.csv(paste0(datapath, "/00_colData.csv"), header = T) %>%
     filter(!RNAseqID %in% outliers)
-colData$training <- factor(colData$training, levels = levelstraining)
-colData$treatment <- factor(colData$treatment, levels = levelstreatment)
+colData$training <- factor(colData$training, levels = c("yoked", "trained"))
+colData$treatment <- factor(colData$treatment, levels = c('standard.yoked' , 'standard.trained' ,'conflict.yoked' ,  'conflict.trained' ))
 
 # remove outliers
 savecols <- as.character(colData$RNAseqID) #select the rowsname 

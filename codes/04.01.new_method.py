@@ -61,7 +61,7 @@ def xi_cor(x, y, method='dense'):
     sorted_y = np.asarray(y)[order]
     r_sorted_y = stats.rankdata(sorted_y, method=method)
     A = np.sum(np.abs(np.diff(r_sorted_y)))
-    # tie-aware l_i 계산: 원시 Y에서 "Y_j >= Y_i"인 개수
+    # tie-aware l_i calculation: number of "Y_j >= Y_i" in original Y 
     l = np.array([np.sum(y >= yi) for yi in y]) #  
     D = 2 * np.sum(l * (n - l))
     xi = 1 - (n * A) / D

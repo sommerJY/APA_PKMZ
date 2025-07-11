@@ -14,8 +14,8 @@ from matplotlib.colors import LinearSegmentedColormap, to_hex
 import matplotlib.patches as mpatches
 from matplotlib.legend_handler import HandlerPatch
 import networkx as nx
-import community
-from community import community_louvain
+import community.community_louvain as community
+
 from gprofiler import GProfiler
 from collections import defaultdict
 from pyvis.network import Network
@@ -28,12 +28,21 @@ from matplotlib import rcParams
 import os 
 
 from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.animation import FuncAnimation, PillowWriter
 
-
+datapath = './data/'
+plotpath = './figures/'
 
 Anchor_genes = ['Arc','Nsf','Prkcz','Fmr1']
 anchor_index = {node: idx for idx, node in enumerate(Anchor_genes)}
+candidategenes = ["Fos", "Fosl2", "Npas4", "Arc", "Grin1", "Gria1", 'Gria2', "Pick1", "Nsf", "Numb", "Fmr1","Camk2a", "Wwc1", "Prkcb", "Prkcz", "Prkci"]
+
+# for pdf saving, text to vector 
+rcParams['pdf.fonttype'] = 42 
+rcParams['ps.fonttype'] = 42   # EPS 
+
+# Arial 
+rcParams['font.family'] = 'sans-serif'
+rcParams['font.sans-serif'] = ['Arial']
 
 
 n_iter = 1000
@@ -138,7 +147,49 @@ L2_rgb_dict_df['hex_val'] = L2_hex_val
 L2_rgb_dict_df['hls_val'] = L2_hls_val
 L2_rgb_dict_df['gene'] = list(L2_rgb_dict_df.index)
 
-plot_3d_rgb(L2_rgb_dict_df, 'hls_val')
+
+
+def plot_3d_rgb_anchor (this_df, choose_color ='hls_val') : 
+    this_df['candy'] = ['O' if a in candidategenes else 'X' for a in list(this_df.index)]
+    #
+    fig = plt.figure(figsize=(8, 6))
+    ax = fig.add_subplot(111, projection='3d')
+    mask_candy = this_df['candy'] == 'O'
+    for index, row in this_df.loc[mask_candy].iterrows():
+        ax.scatter(
+            row['R'],
+            row['G'],
+            row['B'],
+            c=row[choose_color],
+            marker='d',  # diamond
+            s=50,
+            linewidth=0.5,
+            edgecolor='black',
+            alpha=0.7
+        )
+        ax.text(row['R'], row['G'], row['B'], index, size=10, zorder=1, ha='center')
+    #
+    mask_not_candy = this_df['candy'] == 'X'
+    ax.scatter(
+        this_df.loc[mask_not_candy, 'R'],
+        this_df.loc[mask_not_candy, 'G'],
+        this_df.loc[mask_not_candy, 'B'],
+        c=this_df.loc[mask_not_candy, choose_color],
+        marker='o',  # circle
+        s=30,
+        linewidth=0,
+        edgecolor='None',
+        alpha=0.5    )
+    ax.set_xlabel('R')
+    ax.set_ylabel('G')
+    ax.set_zlabel('B')
+    ax.view_init(elev=30, azim=90)
+    plt.tight_layout()
+    plt.show()
+
+
+
+plot_3d_rgb_anchor(L2_rgb_dict_df, 'hls_val')
 
 
 
@@ -192,6 +243,7 @@ def topGO_cluster(cluster_gene, name, color) :
     plt.savefig(plotpath+'04.GO_for_'+name+'.eps', dpi = 300)
     plt.savefig(plotpath+'04.GO_for_'+name+'.pdf', dpi = 300)
     #plt.show()
+    plt.close()
     return res
 
 

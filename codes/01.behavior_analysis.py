@@ -218,7 +218,7 @@ my_pca, pc1_perc, pc2_perc = pca_total
 
 sns.scatterplot(x='PC1', y='PC2', data=my_pca, ax = axes,
                 hue = 'treatment', palette = treatmentcolors,
-                size = 30, legend = False)
+                s = 30, legend = False)
 axes.set_ylabel('PC2 : {}%'.format(round(pc2_perc*100, 1)))
 axes.set_xlabel('PC1 : {}%'.format(round(pc1_perc*100, 1)))
 axes.set_xticklabels('')
@@ -423,7 +423,7 @@ from scipy import stats
 from statsmodels.formula.api import ols
 
 
-def run_anova(be_for_ano, trial_filter, formulas):
+def run_anova_v1(be_for_ano, trial_filter, formulas):
     results = []
     trial_phase = be_for_ano[be_for_ano['trial'].isin(trial_filter)]
     trial_phase['treatment'] = pd.Categorical(trial_phase['treatment'])
@@ -476,7 +476,7 @@ trained_for_ano = trained_for_ano[trained_for_ano.treatment.isin(['conflict.trai
 
 Yoked_results_single = []
 for phase in phases_single:
-    result = run_anova(yoked_for_ano, [phase], formulas_single)
+    result = run_anova_v1(yoked_for_ano, [phase], formulas_single)
     Yoked_results_single.append(result.loc['C(treatment)'])
 
 Yoked_table_1 = pd.concat(Yoked_results_single)
@@ -485,7 +485,7 @@ Yoked_table_1['trial'] = ['Pre-training'] * 3 + ['Retention'] * 3 + ['Retest'] *
 
 Trained_results_single = []
 for phase in phases_single:
-    result = run_anova(trained_for_ano, [phase], formulas_single)
+    result = run_anova_v1(trained_for_ano, [phase], formulas_single)
     Trained_results_single.append(result.loc['C(treatment)'])
 
 Trained_table_1 = pd.concat(Trained_results_single)
@@ -499,7 +499,7 @@ Trained_table_1['trial'] = ['Pre-training'] * 3 + ['Retention'] * 3 + ['Retest']
 desired_order = ['Pre-training', 'Initial Training (T1~T3)', 'Retest', 'Conflict Training (T4~T6)', 'Retention', 'All trials', 'Retention only']
 
 
-Yoked_table_2 = pd.concat([run_anova(yoked_for_ano, phase, formulas_double) for phase in phase_groups])
+Yoked_table_2 = pd.concat([run_anova_v1(yoked_for_ano, phase, formulas_double) for phase in phase_groups])
 Yoked_table_2['trial'] = ['Initial Training (T1~T3)'] * 9 + ['Conflict Training (T4~T6)'] * 9
 
 Yoked_table_1 = format_anova_table(Yoked_table_1)[['trial', 'name', 'df', 'F', 'p', 'sig']]
@@ -513,7 +513,7 @@ Yoked_table_3 = Yoked_table_3.sort_values(['trial','name'])
 Yoked_table_3.to_csv(datapath + '01.behav_anova_onlyYoked.csv')
 
 
-Trained_table_2 = pd.concat([run_anova(trained_for_ano, phase, formulas_double) for phase in phase_groups])
+Trained_table_2 = pd.concat([run_anova_v1(trained_for_ano, phase, formulas_double) for phase in phase_groups])
 Trained_table_2['trial'] = ['Initial Training (T1~T3)'] * 9 + ['Conflict Training (T4~T6)'] * 9
 
 Trained_table_1 = format_anova_table(Trained_table_1)[['trial', 'name', 'df', 'F', 'p', 'sig']]
@@ -532,7 +532,7 @@ Trained_table_3.to_csv(datapath + '01.behav_anova_onlyTrain.csv')
 
 
 # Run ANOVA for all PCs
-def run_anova_pc(be_for_ano, formulas):
+def run_anova_pcv1(be_for_ano, formulas):
     results = []
     tmp_ano = copy.deepcopy(be_for_ano)
     tmp_ano['treatment'] = pd.Categorical(tmp_ano['treatment'])
@@ -562,7 +562,7 @@ pc_res = []
 for i in range(4) : 
     pcto = pc_tots[i]
     title = pc_names[i]
-    pcs = run_anova_pc(pcto, pc_formulas).loc['C(treatment)']
+    pcs = run_anova_pcv1(pcto, pc_formulas).loc['C(treatment)']
     pcs['trial'] = title
     pcs['name'] = ['PC1 ~ treatment', 'PC2 ~ treatment']
     pc_res.append(pcs)
@@ -587,7 +587,7 @@ table_pcs2.to_csv(datapath+'01.PC1_anova.csv')
 # Table 3 
 # Yoked vs trained 
 
-def run_anova(be_for_ano, trial_filter, formulas):
+def run_anova_v2(be_for_ano, trial_filter, formulas):
     results = []
     trial_phase = be_for_ano[be_for_ano['trial'].isin(trial_filter)]
     trial_phase['training'] = pd.Categorical(trial_phase['training'])
@@ -637,7 +637,7 @@ tot_for_ano = copy.deepcopy(behavior)
 
 Tot_results_single = []
 for phase in phases_single:
-    result = run_anova(tot_for_ano, [phase], formulas_single)
+    result = run_anova_v2(tot_for_ano, [phase], formulas_single)
     Tot_results_single.append(result.loc['C(training)'])
 
 Tot_table_1 = pd.concat(Tot_results_single)
@@ -648,7 +648,7 @@ Tot_table_1['trial'] = ['Pre-training'] * 3 + ['Retention'] * 3 + ['Retest'] * 3
 desired_order = ['Pre-training', 'Initial Training (T1~T3)', 'Retest', 'Conflict Training (T4~T6)', 'Retention', 'All trials', 'Retention only']
 
 
-Tot_table_2 = pd.concat([run_anova(tot_for_ano, phase, formulas_double) for phase in phase_groups])
+Tot_table_2 = pd.concat([run_anova_v2(tot_for_ano, phase, formulas_double) for phase in phase_groups])
 Tot_table_2['trial'] = ['Initial Training (T1~T3)'] * 9 + ['Conflict Training (T4~T6)'] * 9
 
 Tot_table_1 = format_anova_table(Tot_table_1)[['trial', 'name', 'df', 'F', 'p', 'sig']]
@@ -664,7 +664,7 @@ Tot_table_3.to_csv(datapath + '01.behav_anova_YKvsTR.csv')
 
 
 # Run ANOVA for all PCs
-def run_anova_pc(be_for_ano, formulas):
+def run_anova_pcv2(be_for_ano, formulas):
     results = []
     tmp_ano = copy.deepcopy(be_for_ano)
     tmp_ano['training'] = pd.Categorical(tmp_ano['training'])
@@ -682,7 +682,7 @@ def run_anova_pc(be_for_ano, formulas):
 TOT_pca_tot = pca_total[0]
 TOT_pca_rn = pca_Rn_all[0]
 
-pc_formulas = {'PC1 ~ training': 'PC1 ~ C(training)', 'PC2 ~ treatment': 'PC2 ~ C(training)'}
+pc_formulas = {'PC1 ~ training': 'PC1 ~ C(training)', 'PC2 ~ training': 'PC2 ~ C(training)'}
 
 pc_tots = [TOT_pca_tot, TOT_pca_rn]
 pc_names = ['All trials','Retention only']
@@ -691,7 +691,7 @@ pc_res = []
 for i in range(2) : 
     pcto = pc_tots[i]
     title = pc_names[i]
-    pcs = run_anova_pc(pcto, pc_formulas).loc['C(training)']
+    pcs = run_anova_pcv2(pcto, pc_formulas).loc['C(training)']
     pcs['trial'] = title
     pcs['name'] = ['PC1 ~ training', 'PC2 ~ training']
     pc_res.append(pcs)
@@ -710,7 +710,7 @@ NEW_PC1 = pca_Rn_all[0]
 NEW_PC1 = NEW_PC1.sort_values('PC1')[['ID','treatment','trialNum','PC1','PC2']]
 NEW_PC1 = NEW_PC1.reset_index(drop = True)
 
-NEW_PC1.to_csv(datapath+'00.NEW_PC1.csv')
+NEW_PC1.to_csv(datapath+'00.NEW_PC1.csv') # for the reference 
 
 
 

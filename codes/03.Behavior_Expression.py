@@ -6,6 +6,9 @@ import seaborn as sns
 from matplotlib.colors import LinearSegmentedColormap
 import copy 
 import scipy.stats as stats 
+from matplotlib import rcParams
+
+
 
 datapath = './data/'
 plotpath = './figures/'
@@ -59,13 +62,13 @@ def normalizing (sub):
     count_matrix = get_count(sub, countData)
     sample_num = count_matrix.shape[1]
     size_factor = count_matrix.loc[(count_matrix!=0).all(axis=1)]
-    size_factor.loc[:,'geo_mean'] = None
+    size_factor.loc[:,'geo_mean'] = np.nan
     def func_geomean(data):
         a = np.log(data)
         return np.exp(np.mean(a, axis=1))
     #
     size_factor['geo_mean'] = func_geomean(size_factor.drop(labels='geo_mean',axis=1))
-    size_factor['geo_mean'].values
+    # size_factor['geo_mean'].values
     size_factor.iloc[:,:sample_num] = size_factor.iloc[:,:sample_num].div(size_factor['geo_mean'], axis = 0)
     size_factor.loc['Normalisation_sample'] = None
     size_factor.loc['Normalisation_sample'] = size_factor.median(axis=0)
@@ -270,7 +273,7 @@ gprof_web_res_re.to_csv(datapath + '03.gProfiler_DEG_PCpos_edited.csv')
 
 
 
-########## To see whether 
+########## To see whether gene expression can differ in 4 treatment 
 import statsmodels.api as sm
 from statsmodels.formula.api import ols
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
@@ -303,7 +306,7 @@ def check_gene_aov (gene, sub, be_for_ano) :
         'Gene' : gene, 
         't-stat' : np.round(tt.statistic,2),
         'pvalue' : np.round(tt.pvalue,2),
-        'df' : np.round(tt.df,2),
+        'df' : np.round(tt.df,2), # scipy version : 1.14
         }, index = [0])
     return ano_table, tukey_df_mini, t_df
     
