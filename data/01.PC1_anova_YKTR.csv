@@ -1,5 +1,0 @@
-,trial,name,df,F,p,sig
-0,All trials,PC1 ~ training,1,285.77,0.0,***
-1,All trials,PC2 ~ training,1,28.61,0.0,***
-2,Retention only,PC1 ~ training,1,46.74,0.0,***
-3,Retention only,PC2 ~ training,1,0.0,0.99, 
