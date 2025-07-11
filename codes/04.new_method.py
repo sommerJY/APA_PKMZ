@@ -2165,22 +2165,31 @@ results_pair_all_df = pd.read_csv(datapath + '04.all_relationship_GG.csv', index
 results_pair_yoked_df = pd.read_csv(datapath + '04.all_relationship_GG_YOKED.csv', index_col = 0)
 results_pair_trained_df = pd.read_csv(datapath + '04.all_relationship_GG_TRAINED.csv', index_col = 0)
 
-raw_pca_df = correlation_pca_plot2(results_pair_all_df, '04.RAW_Correlation_PC_all')
-correlation_pca_plot2(results_pair_yoked_df, '04.RAW_Correlation_PC_yoked')
-correlation_pca_plot2(results_pair_trained_df, '04.RAW_Correlation_PC_trained')
+correlation_pca_plot2(results_pair_all_df, 'SIGMA', '04.RAW_Correlation_PC_all')
+correlation_pca_plot2(results_pair_yoked_df, 'SIGMA', '04.RAW_Correlation_PC_yoked')
+correlation_pca_plot2(results_pair_trained_df, 'SIGMA', '04.RAW_Correlation_PC_trained')
+
+
+
+correlation_pca_plot2(results_pair_all_df, 'PCOR2', '04.RAW_Correlation_PC_all_PCOR2')
+correlation_pca_plot2(results_pair_yoked_df, 'PCOR2', '04.RAW_Correlation_PC_yoked_PCOR2')
+correlation_pca_plot2(results_pair_trained_df, 'PCOR2', '04.RAW_Correlation_PC_trained_PCOR2')
+
+
 
 
 
 col_val = scores_Tr_df2[['hex_val']]
 # col_val.to_csv(datapath + '04.TRAIN_color_val.csv')
+col_val = pd.read_csv(datapath + '04.TRAIN_color_val.csv', index_col = 0)
 
-def correlation_pca_plot2(input_df, name) : 
-    a = input_df[['geneA','geneB','SIGMA']]
-    b = input_df[['geneB','geneA','SIGMA']]
-    a.columns = ['A','B','SIGMA']
-    b.columns = ['A','B','SIGMA']
+def correlation_pca_plot2(input_df, column, name) : 
+    a = input_df[['geneA','geneB',column]]
+    b = input_df[['geneB','geneA',column]]
+    a.columns = ['A','B',column]
+    b.columns = ['A','B',column]
     df_tmp = pd.concat([a,b])
-    df_tmp_sym = df_tmp.pivot(index = 'A', columns = 'B', values = 'SIGMA')
+    df_tmp_sym = df_tmp.pivot(index = 'A', columns = 'B', values = column)
     df_tmp_sym.fillna(1, inplace = True)
     #
     pca_all = PCA()
@@ -2212,22 +2221,10 @@ def correlation_pca_plot2(input_df, name) :
     plt.savefig(plotpath+name+'_'+'04.Correlation_PC_spectrum.png', dpi = 300)
     plt.savefig(plotpath+name+'_'+'04.Correlation_PC_spectrum.eps', dpi = 300)
     plt.savefig(plotpath+name+'_'+'04.Correlation_PC_spectrum.pdf', dpi = 300)
-    #
-    # fig3d = plt.figure()
-    # ax3d = fig3d.add_subplot(111, projection='3d')
-    # scores_all_df['hex_val'] = col_val['hex_val'][scores_all_df.index].values
-    # ax3d.scatter(scores_all_df[0], scores_all_df[1], scores_all_df[2], alpha=0.5, c = scores_all_df['hex_val'])
-    # ax3d.set_xlabel('PC 1')
-    # ax3d.set_ylabel('PC 2')
-    # ax3d.set_zlabel('PC 3')
-    # ax3d.grid(True)
-    # plt.show()
     return scores_all_df
 
 
 train_df_res = correlation_pca_plot(results_pair_trained_df, '04.RAW_Correlation_PC_trained')
-
-
 
 
 

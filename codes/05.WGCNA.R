@@ -479,18 +479,10 @@ SIGMA_matrix_maker = function(sample_matrix, all_gene, name) {
     TOM_MI <- TOMsimilarity(SIGMA_matrix)
     TOM_dist <- 1 - TOM_MI
     #
-    pca_result <- cmdscale(as.dist(TOM_dist), k = 3, eig = TRUE)
-    pca_df <- data.frame(
-        Gene = rownames(SIGMA_matrix),
-        PC1 = pca_result$points[, 1],
-        PC2 = pca_result$points[, 2],
-        PC3 = pca_result$points[, 3]
-    )
-
-    #col_val <- read.csv(paste0(datapath, '04.TRAIN_color_val.csv'), row.names = 1)
-    #pca_df$hex_val <- col_val[pca_df$Gene, 1]
-    write.csv(SIGMA_matrix, paste0(datapath, "05.TOMsim_", name, ".csv"))
-    return(pca_df)
+    colnames(TOM_dist) = all_gene
+    rownames(TOM_dist) = all_gene
+    write.csv(TOM_dist, paste0(datapath, "05.TOMsim_", name, ".csv"))
+    return(TOM_dist)
 }
 
 
@@ -501,6 +493,32 @@ trained_SIGMA = read.csv(paste0(datapath,'04.all_relationship_GG_TRAINED.csv'))
 all_SIGMA_mat = SIGMA_matrix_maker(all_SIGMA, all_gene, "all")
 yoked_SIGMA_mat = SIGMA_matrix_maker(yoked_SIGMA, all_gene, "yoked")
 trained_SIGMA_mat = SIGMA_matrix_maker(trained_SIGMA, all_gene, "trained")
+
+
+
+
+
+Pearson_matrix_maker = function(data__exp, name) {
+    adjacencys <- adjacency(data__exp, power = 1)
+    TOM_ORI <- TOMsimilarity(adjacencys)
+    TOM_dissimilarity <- 1 - TOM_ORI
+    colnames(TOM_dissimilarity) = colnames(data__exp)
+    rownames(TOM_dissimilarity) = colnames(data__exp)
+    write.csv(TOM_dissimilarity, paste0(datapath, "05.TOMsim_", name, ".csv"))
+}
+
+
+all_sample_exp = data_all_exp[,all_gene]
+yoked_sample_exp = all_sample_exp[rownames(all_sample_exp)[grep("yoked", rownames(all_sample_exp))],]
+trained_sample_exp = all_sample_exp[rownames(all_sample_exp)[grep("trained", rownames(all_sample_exp))],]
+
+Pearson_matrix_maker(all_sample_exp, "Pearson_allsample")
+Pearson_matrix_maker(yoked_sample_exp, "Pearson_yoked")
+Pearson_matrix_maker(trained_sample_exp, "Pearson_trained")
+
+# tmp = adjacency(all_sample_exp, power = 1)
+
+
 
 
 
@@ -550,6 +568,11 @@ all_SIGMA_mat = pd.read_csv(datapath + "05.TOMsim_all.csv", index_col = 0)
 yoked_SIGMA_mat = pd.read_csv(datapath + "05.TOMsim_yoked.csv", index_col = 0)
 trained_SIGMA_mat = pd.read_csv(datapath + "05.TOMsim_trained.csv", index_col = 0)
 
+all_PEARSON_mat = pd.read_csv(datapath + "05.TOMsim_Pearson_allsample.csv", index_col = 0)
+yoked_PEARSON_mat = pd.read_csv(datapath + "05.TOMsim_Pearson_yoked.csv", index_col = 0)
+trained_PEARSON_mat = pd.read_csv(datapath + "05.TOMsim_Pearson_trained.csv", index_col = 0)
+
+
 color_vals = pd.read_csv(datapath + "04.TRAIN_color_val.csv", index_col = 0)
 
 
@@ -575,7 +598,7 @@ def correlation_pca_plot3(input_df, name) :
     evr = pca_all.explained_variance_ratio_     # 각 PC의 분산 비율
     pcs = np.arange(1, len(evs)+1)
     scores_all_df = pd.DataFrame(data=scores_all, index = list(input_df.index))
-    PC_df = pd.DataFrame(data=scores_all_df, columns=[0,1])
+    PC_df = pd.DataFrame(data=scores_all_df, columns=[0,1,2])
     # 
     num_lim = 10
     fig, axes = plt.subplots(ncols = 2, nrows = 1, figsize= (6, 3))
@@ -600,11 +623,24 @@ def correlation_pca_plot3(input_df, name) :
     plt.savefig(plotpath+name+'.PCA_spec.pdf', dpi = 300)
     return(PC_df)
 
+
 sigma_all = correlation_pca_plot3(all_SIGMA_mat, "05.all_SIGMA_mat")
 sigma_yoked = correlation_pca_plot3(yoked_SIGMA_mat, "05.yoked_SIGMA_mat")
 sigma_trained = correlation_pca_plot3(trained_SIGMA_mat, "05.trained_SIGMA_mat")
 
+sigma_all.columns = ['PC1', 'PC2', 'PC3', 'hex_val']
+sigma_yoked.columns = ['PC1', 'PC2', 'PC3', 'hex_val']
+sigma_trained.columns = ['PC1', 'PC2', 'PC3', 'hex_val']
 
+
+
+pearson_all = correlation_pca_plot3(all_PEARSON_mat, "05.all_Pearson_mat")
+pearson_yoked = correlation_pca_plot3(yoked_PEARSON_mat, "05.yoked_Pearson_mat")
+pearson_trained = correlation_pca_plot3(trained_PEARSON_mat, "05.trained_Pearson_mat")
+
+pearson_all.columns = ['PC1', 'PC2', 'PC3', 'hex_val']
+pearson_yoked.columns = ['PC1', 'PC2', 'PC3', 'hex_val']
+pearson_trained.columns = ['PC1', 'PC2', 'PC3', 'hex_val']
 
 
 
@@ -641,6 +677,28 @@ def plot_3d_rgb (this_df, title ) :
 plot_3d_rgb(sigma_all, "05.all_SIGMA_mat")
 plot_3d_rgb(sigma_yoked, "05.yoked_SIGMA_mat")
 plot_3d_rgb(sigma_trained, "05.trained_SIGMA_mat")
+
+plot_3d_rgb(pearson_all, "05.all_Pearson_mat")
+plot_3d_rgb(pearson_yoked, "05.yoked_Pearson_mat")
+plot_3d_rgb(pearson_trained, "05.trained_Pearson_mat")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
