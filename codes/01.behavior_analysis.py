@@ -12,15 +12,18 @@ from sklearn import decomposition
 PCA = decomposition.PCA
 import scipy.stats as stats 
 
+
+
+
 datapath = './data/'
 plotpath = './figures/'
 
 # for pdf saving, text to vector 
 rcParams['pdf.fonttype'] = 42 
-rcParams['ps.fonttype'] = 42   # EPS 저장할 경우도 함께
+rcParams['ps.fonttype'] = 42   # In case of saving as eps
 
 
-# Arial 폰트를 기본 sans-serif 폰트로 지정
+# Arial font as default sans-serif font
 rcParams['font.family'] = 'sans-serif'
 rcParams['font.sans-serif'] = ['Arial']
 
@@ -82,7 +85,7 @@ dfshocks = (
 
 
 
-# just new naming
+# New naming 
 groups = ['standard.yoked', 'standard.trained', 'conflict.yoked', 'conflict.trained']
 colors = [treatmentcolors[a] for a in dfshocks['treatment']]
 dfshocks['treatment_col'] = colors
@@ -101,11 +104,9 @@ dfshocks_save[['treatment','trial','trialNum','m','se']].to_csv(datapath + '01.b
 
 
 
-# plot for behavioral traits
+# Plot for behavioral traits
 fig1, axes = plt.subplots(nrows=4, ncols=1, figsize=(7, 10))
 axes = axes.flatten()
-
-
 
 
 for i, treatment in enumerate(groups):
@@ -132,9 +133,8 @@ for i, treatment in enumerate(groups):
     axes[i].spines['right'].set_visible(False)
     axes[i].spines['bottom'].set_visible(False)
 
-axes[3].spines['bottom'].set_visible(True)  # additional edition
+axes[3].spines['bottom'].set_visible(True)  # additional edition for the last plot
 
-# Suptitle을 왼쪽 세로 정렬로 설정
 fig1.suptitle("Number of Shocks", fontsize=14, x=0.02, y=0.5, rotation=90, va='center')
 
 plt.tight_layout()
@@ -143,6 +143,8 @@ plt.savefig(plotpath + '01.bhv_shock.pdf', dpi = 300, bbox_inches='tight')
 plt.savefig(plotpath + '01.bhv_shock.tiff', dpi = 300, bbox_inches='tight')
 plt.savefig(plotpath + '01.bhv_shock.eps', dpi = 300, bbox_inches='tight')
 plt.show()
+
+
 
 
 
@@ -209,7 +211,7 @@ index_num = sum([[b+6*a for a in range(3)] for b in range(6)], [])
 
 
 
-# original total used pc
+# Original total used pc
 fig1, axes = plt.subplots(nrows=1, ncols=1, figsize=(3, 3))
 
 my_pca, pc1_perc, pc2_perc = pca_total
@@ -231,7 +233,7 @@ plt.show()
 
 
 
-# get total PC figures
+# Get total PC figures
 fig1, axes = plt.subplots(nrows=3, ncols=6, figsize=(18, 9))
 axes = axes.flatten()
 
@@ -305,8 +307,7 @@ print(np.round(PC2_t, 4))
 
 
 
-# make figure
-
+# Make figure
 def plot_behavior_feature(ax, titi,  varname, namestr, ylims):
     df = (behavior.groupby(['treatment', 'trial', 'trialNum'])
            .agg(
@@ -405,7 +406,7 @@ plt.close()
 
 
 
-# now all the stats for supplementary materials
+# Now all the stats for supplementary materials
 #-----------------
 
 # Maybe it should be done like this: 
@@ -420,8 +421,6 @@ import pandas as pd
 import statsmodels.api as sm
 from scipy import stats
 from statsmodels.formula.api import ols
-
-
 
 
 def run_anova(be_for_ano, trial_filter, formulas):
@@ -585,16 +584,8 @@ table_pcs2.to_csv(datapath+'01.PC1_anova.csv')
 
 
 
-
-
-
-
-
-
-
-
-# table 3 
-# yoked vs trained 
+# Table 3 
+# Yoked vs trained 
 
 def run_anova(be_for_ano, trial_filter, formulas):
     results = []
@@ -713,11 +704,7 @@ table_pcs2.to_csv(datapath+'01.PC1_anova_YKTR.csv')
 
 
 
-
-
-
-
-# just to save and fix the PC1
+# Just to save and fix the PC1
 
 NEW_PC1 = pca_Rn_all[0]
 NEW_PC1 = NEW_PC1.sort_values('PC1')[['ID','treatment','trialNum','PC1','PC2']]

@@ -69,21 +69,21 @@ def xi_cor(x, y, method='dense'):
 
 
 
-##### xi scaling function because of the small number of samples 
+##### Xi scaling function because of the small number of samples 
 
 def scaling_model(x, c):
     return x[1] / (1 - c / x[0])
 
 obs_res = []
 for i in range(1, 11) : 
-    N = 7*i
+    N = 7*i # used 7 sample wise to see the trend, and used to fit the curve 
     x_linear = np.linspace(0, 10, N)
     y_linear = x_linear
     observed_xicor = xi_cor(x_linear, y_linear, 'dense')  
     pearsonr = stats.pearsonr(x_linear, y_linear)[0]
     obs_res.append((N, observed_xicor, pearsonr))
 
-# set the values 
+# Set the values 
 N_values = np.array([x[0] for x in obs_res])
 observed_xicor_values = np.array([x[1] for x in obs_res])
 answer = np.array([x[2] for x in obs_res])
@@ -115,7 +115,7 @@ colnames = list(RNA_DG.columns)
 RNA_DG_genes = colnames[:colnames.index('RNAseqID')]
 
 
-# selected memory related genes
+# Selected memory related genes
 candidategenes = ["Fos", "Fosl2", "Npas4", "Arc", "Grin1", "Gria1", 'Gria2', "Pick1", "Nsf", "Numb", "Fmr1","Camk2a", "Wwc1", "Prkcb", "Prkcz", "Prkci"]
 
 
@@ -164,7 +164,7 @@ plt.savefig(plotpath+'scat_only_ovlap2.pdf', dpi=300)
 
 
 
-# check Rayleigh distribution availability for new score Z
+# Check Rayleigh distribution availability for new score Z
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -316,12 +316,8 @@ D_new, p_new = kstest(Z_total_new_filtered, 'rayleigh', args=(0, param_new[1]))
 
 # 
 print(f"[Original J] KS statistic = {D_ori:.4f}, p-value = {p_ori:.4f}")
-# KS stat : 0.1250
-# pval : 0.0000
-
 print(f"[New J]      KS statistic = {D_new:.4f}, p-value = {p_new:.4f}")
-# KS stat : 0.1242
-# pval : 0.0000
+
 
 
 
@@ -330,7 +326,6 @@ print(f"[New J]      KS statistic = {D_new:.4f}, p-value = {p_new:.4f}")
 
 # Figure - scatter
 from matplotlib.lines import Line2D
-
 
 results_all_df = pd.read_csv(datapath+'04.all_relationship.csv', index_col = 0)
 custom_colors = [ '#6A00A8',"#00ffff","#fff678"] 
@@ -394,7 +389,7 @@ cbar.set_ticks([0.001, 0.01, 0.02, 0.03, 0.04, 0.05])
 cbar.set_ticklabels(['0.001', '0.01', '0.02', '0.03', '0.04', '0.05'])
 cbar.ax.tick_params(labelsize=8)
 
-# 원형 legend 표시
+# Circular legend 
 circle_deg = Line2D([], [], marker='o', color='w', markerfacecolor='white',
                     markeredgecolor='orangered', markersize=6, markeredgewidth=1.5)
 
@@ -429,8 +424,7 @@ selected_gene = g_g_df[g_g_df.Z_pv<=0.05] # 702
 target_genes = list(np.unique(list(selected_gene.gene) + candidategenes)) # 714
 len(target_genes)
 from itertools import combinations
-gg_combi_list = list(combinations(target_genes, 2))
-# 254541
+gg_combi_list = list(combinations(target_genes, 2)) # 254541 pairs
 
 
 
@@ -487,7 +481,7 @@ def XI_pair_sub_parallel(MY_LOG, geneA, geneB, method='dense'):
     return tmp
 
 
-
+# total merged
 results_pair = Parallel(n_jobs=10, backend="loky")(
     delayed(XI_pair_sub_parallel)(RNA_DG, geneA, geneB) for geneA, geneB in tqdm(gg_combi_list) 
 )
@@ -495,7 +489,7 @@ results_pair = Parallel(n_jobs=10, backend="loky")(
 results_pair_df = pd.DataFrame(results_pair)
 results_pair_df.to_csv(datapath + '04.all_relationship_GG.csv')
 
-## results_pair_df = pd.read_csv(datapath + '04.all_relationship_GG.csv', index_col = 0)
+# results_pair_df = pd.read_csv(datapath + '04.all_relationship_GG.csv', index_col = 0)
 
 
 
@@ -539,7 +533,7 @@ results_pair_trained_df.to_csv(datapath + '04.all_relationship_GG_TRAINED.csv')
 
 
 
-# graph making 
+# Graph making 
 
 def process_seed(seed, G, node_index, n):
     local_co_matrix = np.zeros((n, n), dtype=np.uint16)
@@ -591,8 +585,8 @@ def graph_process(data, out_filename: str, n_iter: int = 1000, n_jobs: int = Non
 
 
 
-n_iter = 1000
-#n_iter = 10
+n_iter = 1000 # 1000 iterations for the final result, takes some time 
+#n_iter = 10 for testing 
 n_jobs = min(8, os.cpu_count())
 
 datasets_1 = [
@@ -607,14 +601,13 @@ datasets_1 = [
 for data in datasets_1 :
     data_read = pd.read_csv(datapath + data[0], index_col = 0)
     out_filename = data[1]
-    data_read = data_read.fillna(0)
     graph_process(data_read, out_filename, n_iter, n_jobs)
 
 
-# total merged 
+# Total merged 
 # final : [(3, 64), (4, 922), (5, 14)]
 
-# Yoked
+# Yoked only 
 # final : [(9, 231), (10, 717), (11, 52)]
 
 # Trained only
@@ -657,12 +650,7 @@ for data in datasets_2 :
 
 
 
-
-
-
-
-
-# put RGB 
+# Put RGB color 
 
 def brighten_by_hls(rgb, lightness=0.4):
     h, l, s = colorsys.rgb_to_hls(*rgb) # too dark 
@@ -670,7 +658,7 @@ def brighten_by_hls(rgb, lightness=0.4):
     return colorsys.hls_to_rgb(h, l, s)
 
 
-def get_RGB(df, min_brightness=0.3): # too dark if all black 
+def get_RGB(df, min_brightness=0.3): # too dark if they are all black 
     rgb = (df - df.min(axis=0)) / (df.max(axis=0) - df.min(axis=0))
     rgb = rgb * (1 - min_brightness) + min_brightness
     # 
@@ -683,7 +671,7 @@ def get_RGB(df, min_brightness=0.3): # too dark if all black
 
 
 
-# re read data 
+# Re read data in case stopped 
 
 clust_all = pd.read_csv(datapath + '04.Louvain_1_iter1000.csv', index_col = 0)
 clust_Yoked = pd.read_csv(datapath + '04.Louvain_1_iter1000_Yoked.csv', index_col = 0)
@@ -696,18 +684,16 @@ for i in genes :
     clust_Trained.at[i,i] = 1
 
 
-
-
 pca_all = PCA() # 
 scores_all = pca_all.fit_transform(clust_all) 
 
 # PC spectrum check 
-evs = pca_all.explained_variance_ # 각 eigenvalue 고윳값 
-evr = pca_all.explained_variance_ratio_     # 각 PC의 분산 비율
+evs = pca_all.explained_variance_ # Eigenvalue 
+evr = pca_all.explained_variance_ratio_     # Variance ratio of each PC
 
 pcs = np.arange(1, len(evs)+1)
 
-num_lim = 10 
+num_lim = 10  # for plotting 
 fig, axes = plt.subplots(ncols = 2, nrows = 1, figsize= (8,3))
 axes[0].plot(pcs[0:num_lim], evs[0:num_lim], 'o-')
 axes[0].set_xticks(pcs[0:num_lim])
@@ -727,6 +713,7 @@ plt.tight_layout()
 plt.savefig(plotpath+'04.Cluster_PC_spectrum.png', dpi = 300)
 plt.savefig(plotpath+'04.Cluster_PC_spectrum.eps', dpi = 300)
 plt.savefig(plotpath+'04.Cluster_PC_spectrum.pdf', dpi = 300)
+# checked the 3 PC is enough to explain the variance 
 
 
 
@@ -735,8 +722,6 @@ scores_all = pca_all.fit_transform(clust_all)
 
 scores_YOKED  = pca_all.transform(clust_Yoked)
 scores_TRAINED  = pca_all.transform(clust_Trained)
-
-
 
 
 
@@ -749,7 +734,7 @@ scores_Yo_df2 = get_RGB(scores_Yo_df)
 scores_Tr_df2 = get_RGB(scores_Tr_df)
 
 scores_Tr_df_colchange = copy.deepcopy(scores_Tr_df)
-scores_Tr_df_colchange['G'] = 1-scores_Tr_df_colchange['G']
+scores_Tr_df_colchange['G'] = 1-scores_Tr_df_colchange['G'] # used this to change the color, it was too dark. doesn't matter though not used in the final figure 
 
 scores_Tr_df2 = get_RGB(scores_Tr_df_colchange)
 
@@ -980,21 +965,6 @@ save_transition_gif(np.array(scores_Yo_df2[['R','G','B']]), np.array(scores_Tr_d
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # cluster map 
 
 clust_all = pd.read_csv(datapath + '04.Louvain_1_iter1000.csv', index_col = 0)
@@ -1039,54 +1009,17 @@ def plot_clustermap(matrix, filename, vmin=0, vmax=1, center=None, cmap='Blues',
 plot_clustermap(clust_Yoked, '04.clustermap_YOKED', candy_labels=candidategenes)
 plot_clustermap(clust_Trained, '04.clustermap_Trained', candy_labels=candidategenes)
 
+# see the difference 
+diff_mat = clust_Trained - clust_Yoked
+plot_clustermap(diff_mat, f'04.clustermap_TR_min_YO', vmin=-1, vmax=1, center=0, cmap='bwr', candy_labels=candidategenes)
 
-diffs = {
-    'TR_min_YO': clust_Trained - clust_Yoked,
-}
-
-
-for name, diff_mat in diffs.items():
-    plot_clustermap(diff_mat, f'04.clustermap_{name}', vmin=-1, vmax=1, center=0, cmap='bwr', candy_labels=candidategenes)
-    #
-    diff_candy = diff_mat.loc[candidategenes, candidategenes]
-    plot_clustermap(diff_candy, f'04.clustermap_{name}.candy', vmin=-1, vmax=1, center=0, cmap='bwr')
+# filter only the candidate genes 
+diff_candy = diff_mat.loc[candidategenes, candidategenes]
+plot_clustermap(diff_candy, f'04.clustermap_TR_min_YO.candy', vmin=-1, vmax=1, center=0, cmap='bwr')
 
 
 
-
-
-# normalized version 
-from sklearn.preprocessing import StandardScaler
-scaler = StandardScaler()
-
-def global_minmax(mat: pd.DataFrame, feature_range=(-1,1)):
-    flat = mat.values.flatten()
-    minv, maxv = flat.min(), flat.max()
-    a, b = feature_range
-    df = (mat - minv) / (maxv - minv) * (b - a) + a
-    # symmetry? 
-    df = (df + df.T) / 2
-    np.fill_diagonal(df.values, 0)
-    return df
-
-for name, diff_mat in diffs.items():
-    df_mm = global_minmax(diff_mat, feature_range=(-1,1))
-    #
-    plot_clustermap(df_mm, f'04.clustermap_norm_{name}', vmin=-1, vmax=1, center=0, cmap='bwr', candy_labels=candidategenes)
-    #
-    diff_candy = df_mm.loc[candidategenes, candidategenes]
-    plot_clustermap(diff_candy, f'04.clustermap_norm_{name}.candy', vmin=-1, vmax=1, center=0, cmap='bwr')
-
-# no difference 
-
-
-
-
-
-
-
-
-# Gprofiler to check some cluster 
+# Gprofiler to check some cluster to see the GO term 
 
 import numpy as np
 from scipy.cluster.hierarchy import fcluster
@@ -1094,15 +1027,16 @@ from scipy.cluster.hierarchy import fcluster
 from scipy.spatial.distance import pdist
 from scipy.cluster.hierarchy import linkage, cut_tree
 
-dist = pdist(diffs['TR_min_YO'].values, metric='correlation')
+dist = pdist(diff_mat, metric='correlation')
 L = linkage(dist, method='average')
 
 labels = fcluster(L, t=3, criterion='maxclust') # same 
 # labels = cut_tree(L, n_clusters=3).squeeze()
 
-idx = list(diffs['TR_min_YO'].index).index('Prkcz')
+idx = list(diff_mat.index).index('Prkcz')
 target_label = labels[idx]
-members = [g for g, lbl in zip(diffs['TR_min_YO'].index, labels) if lbl == target_label]
+members = [g for g, lbl in zip(diff_mat.index, labels) if lbl == target_label]
+
 
 
 gp = GProfiler(return_dataframe=True)
@@ -1143,9 +1077,6 @@ plt.show()
 
 
 
-
-
-
 # get cosine similarity values 
 
 # get Δv
@@ -1172,12 +1103,9 @@ cos_align = (delta * u).sum(axis=1) / np.linalg.norm(delta, axis=1)
 cos_align = pd.Series(cos_align, index = genes)
 
 
-
 # method 3) gene similarity 
 dotprod = (scores_YOKED * scores_TRAINED).sum(axis=1)
 top_dot   = pd.Series(dotprod, index=genes)
-
-dotprod = (scores_YOKED * scores_TRAINED).sum(axis=1)
 
 # row-wise norm
 norm_Y = np.linalg.norm(scores_YOKED, axis=1)
@@ -1195,8 +1123,6 @@ top_all['hex_val'] = list(scores_Tr_df2['hex_val'])
 
 
 
-
-
 # visualization 
 def simple_2d_plot(df, x_col, y_col, palette, plotpath, filename):
     fig, ax = plt.subplots(figsize=(6, 6))
@@ -1205,7 +1131,7 @@ def simple_2d_plot(df, x_col, y_col, palette, plotpath, filename):
         data=df,
         x=x_col,
         y=y_col,
-        hue=df.index,        # index(=gene)를 기준으로 색상 지정
+        hue=df.index,       
         palette=palette,
         marker='o',
         s=50,
@@ -1235,7 +1161,7 @@ def simple_2d_plot(df, x_col, y_col, palette, plotpath, filename):
 
 
 
-top_all['gene'] = list(top_all.index)  # (필요 시)
+top_all['gene'] = list(top_all.index)  
 hex_palette = { gene: top_all.loc[gene, 'hex_val'] for gene in top_all.index }
 
 simple_2d_plot(
@@ -1268,14 +1194,6 @@ simple_2d_plot(
 
 
 
-
-
-
-
-
-
-
-#####
 ##### how about 3D plot 
 
 
@@ -1322,16 +1240,8 @@ ax.set_xlabel('norm')
 ax.set_ylabel('cent_sim')
 ax.set_zlabel('gene_sim')
 
-fig.canvas.mpl_connect('key_press_event', on_key2)
+fig.canvas.mpl_connect('key_press_event', on_key2) # saved with j key 
 plt.show()
-
-
-
-
-
-
-
-
 
 
 
@@ -1356,7 +1266,7 @@ tsne_results = [[None for _ in random_states] for _ in perplexities]
 
 for i, perplexity in enumerate(perplexities):
     for j, random_state in enumerate(random_states):
-        reducer = TSNE(n_components=2, perplexity=perplexity, random_state=random_state)
+        reducer = TSNE(n_components=2, perplexity=perplexity, random_state=random_state) # , init='pca' if you want to use PCA initialization
         X_2d = reducer.fit_transform(t_X)
         df2d = pd.DataFrame(X_2d, index=genes, columns=['comp1', 'comp2'])
         df2d['candy'] = t_y.values
@@ -1458,7 +1368,7 @@ plt.close(fig2)
 
 
 
-
+# individual plot 
 
 def tsne_plot(random_state, perplexity, t_X) : 
     tsne_reducer = TSNE(n_components=2, perplexity=perplexity, random_state=random_state)
@@ -1497,11 +1407,7 @@ def tsne_plot(random_state, perplexity, t_X) :
 
 
 tsne_plot(42, 60, t_X)
-
 tsne_plot(30, 70, t_X)
-
-
-
 
 
 
@@ -1698,7 +1604,7 @@ plt.close(fig2)
 
 
 
-
+# individual plot 
 def umap_plot(random_state, n_neighbors, min_dist, t_X) : 
     umap_reducer = UMAP(n_components = 2, random_state = random_state, n_neighbors=n_neighbors, min_dist=min_dist, metric='euclidean')
     X_2d = umap_reducer.fit_transform(t_X)
@@ -1745,486 +1651,6 @@ umap_plot(200, 30, 0.5, t_X)
 
 
 
-
-
-
-
-
-
-
-
-
-# for supplementary figure 
-# compare original exp based
-
-
-gene_700 = RNA_DG[target_genes+['training','PC1']]
-
-gene_700_all = copy.deepcopy(gene_700)[target_genes].T
-gene_700_yoked = gene_700[gene_700.training == 'yoked'][target_genes].T
-gene_700_trained = gene_700[gene_700.training == 'trained'][target_genes].T
-gene_700_NO = gene_700[gene_700.PC1 <0 ][target_genes].T
-gene_700_YES = gene_700[gene_700.PC1 >0][target_genes].T
-
-
-
-df_scaled = pd.DataFrame(
-    StandardScaler().fit_transform(gene_700_all.T).T,
-    index=gene_700_all.index, columns=gene_700_all.columns
-)
-
-# 2) PCA  ( genes ×  samples)
-exp_pca = PCA(n_components=3)
-df_all = exp_pca.fit_transform(df_scaled.values)
-
-# 3) PCA removing cector (shape = n_features = n_samples)
-#    → whn transforming, contribution 0 
-mean_vec = pd.Series(exp_pca.mean_, index=df_scaled.columns)
-# exp_pca.mean_ original mean 
-#  
-
-# 4) yoked/trained 
-yoked_samples   = gene_700.loc[gene_700["training"]=="yoked"].index
-trained_samples = gene_700.loc[gene_700["training"]=="trained"].index
-
-No_samples = gene_700.loc[gene_700["PC1"]<0].index
-Yes_samples = gene_700.loc[gene_700["PC1"]>0].index
-
-
-df_yoked_1 = df_scaled.copy()[yoked_samples]
-df_yoked_2 = df_scaled.copy()
-for ind in yoked_samples : 
-    df_yoked_2.loc[:,ind] = mean_vec.loc[ind]
-
-df_trained_1 = df_scaled.copy()[trained_samples]
-df_trained_2 = df_scaled.copy()
-for ind in trained_samples : 
-    df_trained_2.loc[:,ind] = mean_vec.loc[ind]
-
-df_NO_1 = df_scaled.copy()[No_samples]
-df_NO_2 = df_scaled.copy()
-for ind in No_samples : 
-    df_NO_2.loc[:,ind] = mean_vec.loc[ind]
-
-df_YES_1 = df_scaled.copy()[Yes_samples]
-df_YES_2 = df_scaled.copy()
-for ind in Yes_samples : 
-    df_YES_2.loc[:,ind] = mean_vec.loc[ind]
-
-
-# use individual way - fit_transform each 
-expPC_yo = PCA(n_components=3)
-scores_yoked_1   = expPC_yo.fit_transform(df_yoked_1.values)    # shape: (n_genes, 3)
-
-expPC_tr = PCA(n_components=3)
-scores_trained_1 = expPC_tr.fit_transform(df_trained_1.values)  # shape: (n_genes, 3)
-
-expPC_NO = PCA(n_components=3)
-scores_NO_1   = expPC_NO.fit_transform(df_NO_1.values)    # shape: (n_genes, 3)
-
-expPC_YS = PCA(n_components=3)
-scores_YES_1 = expPC_YS.fit_transform(df_YES_1.values)  # shape: (n_genes, 3)
-
-exp_score_all_df1 = pd.DataFrame(df_all, index = list(gene_700_all.index), columns = ['R','G','B'])
-exp_score_Yo_df1 = pd.DataFrame(scores_yoked_1, index = list(gene_700_yoked.index), columns = ['R','G','B'])
-exp_score_Tr_df1 = pd.DataFrame(scores_trained_1, index = list(gene_700_trained.index), columns = ['R','G','B'])
-exp_score_No_df1 = pd.DataFrame(scores_NO_1, index = list(gene_700_NO.index), columns = ['R','G','B'])
-exp_score_Ys_df1 = pd.DataFrame(scores_YES_1, index = list(gene_700_YES.index), columns = ['R','G','B'])
-
-exp_score_all_df1 = get_RGB(exp_score_all_df1)
-exp_score_Yo_df1 = get_RGB(exp_score_Yo_df1)
-exp_score_Tr_df1 = get_RGB(exp_score_Tr_df1)
-exp_score_No_df1 = get_RGB(exp_score_No_df1)
-exp_score_Ys_df1 = get_RGB(exp_score_Ys_df1)
-
-expcol_train = list(exp_score_Tr_df1.hex_val)
-expcol_yes = list(exp_score_Ys_df1.hex_val)
-
-plot_3d_rgb(exp_score_all_df1, exp_pca.explained_variance_ratio_[0], exp_pca.explained_variance_ratio_[1], exp_pca.explained_variance_ratio_[2])
-plot_3d_rgb(exp_score_Yo_df1, expPC_yo.explained_variance_ratio_[0], expPC_yo.explained_variance_ratio_[1], expPC_yo.explained_variance_ratio_[2])
-plot_3d_rgb(exp_score_Tr_df1, expPC_tr.explained_variance_ratio_[0], expPC_tr.explained_variance_ratio_[1], expPC_tr.explained_variance_ratio_[2])
-plot_3d_rgb(exp_score_No_df1, expPC_NO.explained_variance_ratio_[0], expPC_NO.explained_variance_ratio_[1], expPC_NO.explained_variance_ratio_[2])
-plot_3d_rgb(exp_score_Ys_df1, expPC_YS.explained_variance_ratio_[0], expPC_YS.explained_variance_ratio_[1], expPC_YS.explained_variance_ratio_[2])
-
-
-# use total way - exp_pca transform 
-scores_yoked_2   = exp_pca.transform(df_yoked_2.values)    # shape: (n_genes, 3)
-scores_trained_2 = exp_pca.transform(df_trained_2.values)  # shape: (n_genes, 3)
-
-scores_NO_2   = exp_pca.transform(df_NO_2.values)    # shape: (n_genes, 3)
-scores_YES_2 = exp_pca.transform(df_YES_2.values)  # shape: (n_genes, 3)
-
-exp_score_all_df = pd.DataFrame(df_all, index = list(gene_700_all.index), columns = ['R','G','B'])
-exp_score_Yo_df = pd.DataFrame(scores_yoked_2, index = list(gene_700_yoked.index), columns = ['R','G','B'])
-exp_score_Tr_df = pd.DataFrame(scores_trained_2, index = list(gene_700_trained.index), columns = ['R','G','B'])
-exp_score_No_df = pd.DataFrame(scores_NO_2, index = list(gene_700_NO.index), columns = ['R','G','B'])
-exp_score_Ys_df = pd.DataFrame(scores_YES_2, index = list(gene_700_YES.index), columns = ['R','G','B'])
-
-exp_score_all_df2 = get_RGB(exp_score_all_df)
-exp_score_Yo_df2 = get_RGB(exp_score_Yo_df)
-exp_score_Tr_df2 = get_RGB(exp_score_Tr_df)
-exp_score_No_df2 = get_RGB(exp_score_No_df)
-exp_score_Ys_df2 = get_RGB(exp_score_Ys_df)
-
-expcol_train = list(exp_score_Tr_df2.hex_val)
-expcol_yes = list(exp_score_Ys_df2.hex_val)
-
-plot_3d_rgb(exp_score_all_df2, exp_pca.explained_variance_ratio_[0], exp_pca.explained_variance_ratio_[1], exp_pca.explained_variance_ratio_[2])
-plot_3d_rgb(exp_score_Yo_df2, exp_pca.explained_variance_ratio_[0], exp_pca.explained_variance_ratio_[1], exp_pca.explained_variance_ratio_[2])
-plot_3d_rgb(exp_score_Tr_df2, exp_pca.explained_variance_ratio_[0], exp_pca.explained_variance_ratio_[1], exp_pca.explained_variance_ratio_[2])
-plot_3d_rgb(exp_score_No_df2, exp_pca.explained_variance_ratio_[0], exp_pca.explained_variance_ratio_[1], exp_pca.explained_variance_ratio_[2])
-plot_3d_rgb(exp_score_Ys_df2, exp_pca.explained_variance_ratio_[0], exp_pca.explained_variance_ratio_[1], exp_pca.explained_variance_ratio_[2])
-
-
-# Usage: generate two GIFs
-save_transition_gif(np.array(exp_score_Yo_df2[['R','G','B']]), np.array(exp_score_Tr_df2[['R','G','B']]), expcol_train, list(exp_score_Tr_df2.index), candidategenes,
-                    output_path=plotpath+'04.PCexpall_yotr.gif')
-
-save_transition_gif(np.array(exp_score_No_df2[['R','G','B']]), np.array(exp_score_Ys_df2[['R','G','B']]), expcol_yes, list(exp_score_Ys_df2.index), candidategenes,
-                    output_path=plotpath+'04.PCexpall_noyes.gif')
-
-
-
-exp_alls = copy.deepcopy(exp_score_all_df2)
-exp_yo = copy.deepcopy(exp_score_Yo_df2)
-exp_tr = copy.deepcopy(exp_score_Tr_df2)
-exp_yo['hex_val'] = list(exp_tr['hex_val'])
-exp_yo['candy'] = ['O' if a in candidategenes else 'X' for a in exp_yo.index ]
-exp_tr['candy'] = ['O' if a in candidategenes else 'X' for a in exp_tr.index ]
-
-
-plot_yoked_vs_trained(
-    exp_yo, exp_tr, 
-    exp_pca.explained_variance_ratio_[0], 
-    exp_pca.explained_variance_ratio_[1], 
-    exp_pca.explained_variance_ratio_[2], 
-    '04.both_exp_rotated3d')
-
-
-fig.savefig(plotpath+'test_rotated3d.pdf', format='pdf', dpi=300, bbox_inches='tight')
-
-
-
-
-
-
-
-
-
-
-# also check the padded versions 
-# projection 
-
-version 0 : original all 714 genes 
-
-clust_all = pd.read_csv(datapath + '04.Louvain_1_iter1000.csv', index_col = 0)
-clust_Yoked = pd.read_csv(datapath + '04.Louvain_1_iter1000_Yoked.csv', index_col = 0)
-clust_Trained = pd.read_csv(datapath + '04.Louvain_1_iter1000_Trained.csv', index_col = 0)
-
-genes = list(clust_all.index)
-for i in genes :
-    clust_all.at[i,i] = 1
-    clust_Yoked.at[i,i] = 1
-    clust_Trained.at[i,i] = 1
-
-
-pca_v0_all = PCA(n_components=3)
-scores_v0_all = pca_v0_all.fit_transform(clust_all) 
-scores_v0_YOKED  = pca_v0_all.transform(clust_Yoked)
-scores_v0_TRAINED  = pca_v0_all.transform(clust_Trained)
-
-scores_v0_all_df = pd.DataFrame(scores_v0_all, index = list(clust_all.index), columns = ['R','G','B'])
-scores_v0_Yo_df = pd.DataFrame(scores_v0_YOKED, index = list(clust_Yoked.index), columns = ['R','G','B'])
-scores_v0_Tr_df = pd.DataFrame(scores_v0_TRAINED, index = list(clust_Trained.index), columns = ['R','G','B'])
-
-
-
-version 1  : new iteration with 12 key genes padded with 0 correlation 
-
-clust_pad_all = pd.read_csv(datapath + '04.Louvain_1_iter1000.TRAIN_PAD.csv', index_col = 0)
-clust_pad_Yoked = pd.read_csv(datapath + '04.Louvain_1_iter1000.YOKED_PAD.csv', index_col = 0)
-clust_pad_Trained = pd.read_csv(datapath + '04.Louvain_1_iter1000.MERGE_PAD.csv', index_col = 0)
-
-genes = list(clust_pad_all.index)
-for i in genes :
-    clust_pad_all.at[i,i] = 1
-    clust_pad_Yoked.at[i,i] = 1
-    clust_pad_Trained.at[i,i] = 1
-
-
-pca_v1_all = PCA(n_components=3)
-scores_v1_all = pca_v1_all.fit_transform(clust_pad_all) 
-scores_v1_YOKED  = pca_v1_all.transform(clust_pad_Yoked)
-scores_v1_TRAINED  = pca_v1_all.transform(clust_pad_Trained)
-
-scores_v1_all_df = pd.DataFrame(scores_v1_all, index = list(clust_pad_all.index), columns = ['R','G','B'])
-scores_v1_Yo_df = pd.DataFrame(scores_v1_YOKED, index = list(clust_pad_Yoked.index), columns = ['R','G','B'])
-scores_v1_Tr_df = pd.DataFrame(scores_v1_TRAINED, index = list(clust_pad_Trained.index), columns = ['R','G','B'])
-
-
-
-version 2 : just pad 12 genes from the original cluster vector 
-
-clust_v2_all = copy.deepcopy(clust_all)
-clust_v2_yoked = copy.deepcopy(clust_Yoked)
-clust_v2_trained = copy.deepcopy(clust_Trained)
-
-for cc in new_candy : 
-    clust_v2_all.loc[cc, :] = 0
-    clust_v2_all.loc[:, cc] = 0
-    clust_v2_all.loc[cc, cc] = 1
-    clust_v2_yoked.loc[cc, :] = 0
-    clust_v2_yoked.loc[:, cc] = 0
-    clust_v2_yoked.loc[cc, cc] = 1
-    clust_v2_trained.loc[cc, :] = 0
-    clust_v2_trained.loc[:, cc] = 0
-    clust_v2_trained.loc[cc, cc] = 1
-
-
-
-pca_v2_all = PCA(n_components=3)
-scores_v2_all = pca_v2_all.fit_transform(clust_v2_all) 
-scores_v2_YOKED  = pca_v2_all.transform(clust_v2_yoked)
-scores_v2_TRAINED  = pca_v2_all.transform(clust_v2_trained)
-
-scores_v2_all_df = pd.DataFrame(scores_v2_all, index = list(clust_v2_all.index), columns = ['R','G','B'])
-scores_v2_Yo_df = pd.DataFrame(scores_v2_YOKED, index = list(clust_v2_yoked.index), columns = ['R','G','B'])
-scores_v2_Tr_df = pd.DataFrame(scores_v2_TRAINED, index = list(clust_v2_trained.index), columns = ['R','G','B'])
-
-
-
-
-
-# visualization 
-
-# with original PC values
-alls = copy.deepcopy(scores_v1_all_df)
-alls['hex_val'] = scores_Tr_df2['hex_val']
-plot_3d_rgb(alls, pca_v1_all.explained_variance_ratio_[0], pca_v1_all.explained_variance_ratio_[1], pca_v1_all.explained_variance_ratio_[2])
-
-Yo = copy.deepcopy(scores_v1_Yo_df)
-Yo['hex_val'] = scores_Tr_df2['hex_val']
-plot_3d_rgb(Yo, pca_v1_all.explained_variance_ratio_[0], pca_v1_all.explained_variance_ratio_[1], pca_v1_all.explained_variance_ratio_[2])
-
-Tr = copy.deepcopy(scores_v1_Tr_df)
-Tr['hex_val'] = scores_Tr_df2['hex_val']
-plot_3d_rgb(Tr, pca_v1_all.explained_variance_ratio_[0], pca_v1_all.explained_variance_ratio_[1], pca_v1_all.explained_variance_ratio_[2])
-
-
-
-# with original PC values
-alls = copy.deepcopy(scores_v2_all_df)
-alls['hex_val'] = scores_Tr_df2['hex_val']
-plot_3d_rgb(alls, pca_v2_all.explained_variance_ratio_[0], pca_v2_all.explained_variance_ratio_[1], pca_v2_all.explained_variance_ratio_[2])
-
-Yo = copy.deepcopy(scores_v2_Yo_df)
-Yo['hex_val'] = scores_Tr_df2['hex_val']
-plot_3d_rgb(Yo, pca_v2_all.explained_variance_ratio_[0], pca_v2_all.explained_variance_ratio_[1], pca_v2_all.explained_variance_ratio_[2])
-
-Tr = copy.deepcopy(scores_v2_Tr_df)
-Tr['hex_val'] = scores_Tr_df2['hex_val']
-plot_3d_rgb(Tr, pca_v2_all.explained_variance_ratio_[0], pca_v2_all.explained_variance_ratio_[1], pca_v2_all.explained_variance_ratio_[2])
-
-
-
-# how similar??? 
-
-import numpy as np
-
-# 1) PCA  eigenvector(loading) (n_components, n_genes)
-E0 = pca_v0_all.components_    # version0
-E1 = pca_v1_all.components_    # version1
-E2 = pca_v2_all.components_    # version2
-
-# 2) cosine similarity 
-def cosine(u, v):
-    return np.dot(u, v) / (np.linalg.norm(u) * np.linalg.norm(v))
-
-for i in range(3):
-    cos01 = cosine(E0[i], E1[i])
-    cos02 = cosine(E0[i], E2[i])
-    print(f"PC{i+1} : v0 vs v1 = {cos01:.4f},   v0 vs v2 = {cos02:.4f}")
-
-
-
-# 1) fit for v0 merge 
-pca_v0 = PCA(n_components=3)
-pca_v0.fit(clust_all)   # version 0의 clust_all
-
-# 2) project to same dim
-scores0_all     = pca_v0.transform(clust_all)
-scores0_yoked   = pca_v0.transform(clust_Yoked)
-scores0_trained = pca_v0.transform(clust_Trained)
-
-scores0_pad_all     = pca_v0.transform(clust_pad_all)
-scores0_pad_yoked   = pca_v0.transform(clust_pad_Yoked)
-scores0_pad_trained = pca_v0.transform(clust_pad_Trained)
-
-
-
-# version0: clust_all, clust_Yoked,   clust_Trained
-# version1: clust_pad_all, clust_pad_Yoked, clust_pad_Trained
-# version2: clust_v2_all, clust_v2_Yoked,  clust_v2_Trained
-
-matrices = {
-    'v0': {
-        'merged': clust_all,
-        'yoked' : clust_Yoked,
-        'trained': clust_Trained
-    },
-    'v1': {
-        'merged': clust_pad_all,
-        'yoked' : clust_pad_Yoked,
-        'trained': clust_pad_Trained
-    },
-    'v2': {
-        'merged': clust_v2_all,
-        'yoked' : clust_v2_yoked,
-        'trained': clust_v2_trained
-    }
-}
-
-#  1) each PCA
-pca_models = {
-    ver: PCA(n_components=3).fit(matrices[ver]['merged'])
-    for ver in matrices
-}
-
-
-# 2) projection PC 
-projections = {
-    ver: {
-        cond: pca_models[ver].transform(matrices[ver][cond])
-        for cond in ['merged','yoked','trained']
-    }
-    for ver in matrices
-}
-
-# pairwise
-from itertools import combinations
-
-versions = ['v0','v1','v2']
-conditions = ['merged','yoked','trained']
-
-for cond in conditions:
-    print(f"Condition: {cond}")
-    for vA, vB in combinations(versions, 2):
-        projA = projections[vA][cond] #  (n_genes, 3)
-        projB = projections[vB][cond]
-        # each PC cos 
-        cos_vals = [cosine(projA[:, i], projB[:, i]) for i in range(3)]
-        print(f"  {vA} vs {vB}:  " +
-              ", ".join([f"PC{i+1}={cos_vals[i]:.4f}" for i in range(3)]))
-
-
-
-# how about with original? 
-
-original_owns = {
-    ver: {
-        cond: PCA(n_components=3).fit_transform(matrices[ver][cond])
-        for cond in ['merged','yoked','trained']
-    }
-    for ver in matrices
-}
-
-# pairwise
-from itertools import combinations
-
-versions = ['v0','v1','v2']
-conditions = ['merged','yoked','trained']
-
-for cond in conditions:
-    print(f"Condition: {cond}")
-    for vA, vB in combinations(versions, 2):
-        projA = original_owns[vA][cond]  # shape = (n_genes, 3)
-        projB = original_owns[vB][cond]
-        # 각 PC별 cosine
-        cos_vals = [cosine(projA[:, i], projB[:, i]) for i in range(3)]
-        print(f"  {vA} vs {vB}:  " +
-              ", ".join([f"PC{i+1}={cos_vals[i]:.4f}" for i in range(3)]))
-
-
-
-
-
-
-
-
-
-
-# 그냥 correlation 가지고 그려보는건 어떤지 한번만 확인해보기 
-# 근데 내가 보기엔, 우리가 색을 칠해놔서 저렇게 차이가 보이는거지, 
-# clustering prob 안쓰면 저런거 안보일 것 같음 
-
-
-
-
-# Load data and ensure symmetry by making geneA and geneB interchangeable
-results_pair_all_df = pd.read_csv(datapath + '04.all_relationship_GG.csv', index_col = 0)
-results_pair_yoked_df = pd.read_csv(datapath + '04.all_relationship_GG_YOKED.csv', index_col = 0)
-results_pair_trained_df = pd.read_csv(datapath + '04.all_relationship_GG_TRAINED.csv', index_col = 0)
-
-correlation_pca_plot2(results_pair_all_df, 'SIGMA', '04.RAW_Correlation_PC_all')
-correlation_pca_plot2(results_pair_yoked_df, 'SIGMA', '04.RAW_Correlation_PC_yoked')
-correlation_pca_plot2(results_pair_trained_df, 'SIGMA', '04.RAW_Correlation_PC_trained')
-
-
-
-correlation_pca_plot2(results_pair_all_df, 'PCOR2', '04.RAW_Correlation_PC_all_PCOR2')
-correlation_pca_plot2(results_pair_yoked_df, 'PCOR2', '04.RAW_Correlation_PC_yoked_PCOR2')
-correlation_pca_plot2(results_pair_trained_df, 'PCOR2', '04.RAW_Correlation_PC_trained_PCOR2')
-
-
-
-
-
-col_val = scores_Tr_df2[['hex_val']]
-# col_val.to_csv(datapath + '04.TRAIN_color_val.csv')
-col_val = pd.read_csv(datapath + '04.TRAIN_color_val.csv', index_col = 0)
-
-def correlation_pca_plot2(input_df, column, name) : 
-    a = input_df[['geneA','geneB',column]]
-    b = input_df[['geneB','geneA',column]]
-    a.columns = ['A','B',column]
-    b.columns = ['A','B',column]
-    df_tmp = pd.concat([a,b])
-    df_tmp_sym = df_tmp.pivot(index = 'A', columns = 'B', values = column)
-    df_tmp_sym.fillna(1, inplace = True)
-    #
-    pca_all = PCA()
-    scores_all = pca_all.fit_transform(df_tmp_sym) 
-    evs = pca_all.explained_variance_ # 각 eigenvalue 고윳값 
-    evr = pca_all.explained_variance_ratio_     # 각 PC의 분산 비율
-    pcs = np.arange(1, len(evs)+1)
-    scores_all_df = pd.DataFrame(data=scores_all, index = list(df_tmp_sym.index))
-    PC_df = pd.DataFrame(data=scores_all_df, columns=[0,1])
-    # 
-    num_lim = 10
-    fig, axes = plt.subplots(ncols = 2, nrows = 1, figsize= (6, 3))
-    #
-    axes[0].bar(pcs[0:num_lim], evr[0:num_lim], alpha=0.6)
-    axes[0].plot(pcs[0:num_lim], np.cumsum(evr)[0:num_lim], 'r--', marker='o', label='Cumulative')
-    axes[0].set_xticks(pcs[0:num_lim])
-    axes[0].set_xlabel('PC')
-    axes[0].set_ylabel('Variance Ratio')
-    axes[0].grid(axis = 'y')
-    axes[0].legend()
-    #
-    PC_df['hex_val'] = col_val['hex_val'][PC_df.index].values
-    axes[1].scatter(PC_df[0], PC_df[1], alpha=0.8, c = PC_df['hex_val'], edgecolors = None, linewidths = 0, s = 20)
-    axes[1].set_xlabel('PC 1')
-    axes[1].set_ylabel('PC 2')
-    axes[1].grid(True)
-    #
-    plt.tight_layout()
-    plt.savefig(plotpath+name+'_'+'04.Correlation_PC_spectrum.png', dpi = 300)
-    plt.savefig(plotpath+name+'_'+'04.Correlation_PC_spectrum.eps', dpi = 300)
-    plt.savefig(plotpath+name+'_'+'04.Correlation_PC_spectrum.pdf', dpi = 300)
-    return scores_all_df
-
-
-train_df_res = correlation_pca_plot(results_pair_trained_df, '04.RAW_Correlation_PC_trained')
 
 
 

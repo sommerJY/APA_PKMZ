@@ -10,7 +10,7 @@ import scipy.stats as stats
 datapath = './data/'
 plotpath = './figures/'
 
-# for pdf saving, text to vector 
+# For pdf saving, text to vector 
 rcParams['pdf.fonttype'] = 42 
 rcParams['ps.fonttype'] = 42   # EPS saving 
 
@@ -23,7 +23,7 @@ rcParams['font.sans-serif'] = ['Arial']
 # To merge expression and behavioral PC1 
 # I restarted separating the subfields, also to match with Asit code 
 
-# original count 
+# Original count 
 
 behav_PC1 = pd.read_csv(datapath + '00.NEW_PC1.csv', index_col = 0)
 colData = pd.read_csv(datapath+ "00_colData.csv")
@@ -43,7 +43,7 @@ CA1_samples = list(colData[colData.subfield =='CA1']['RNAseqID'])
 all_samples = DG_samples + CA3_samples + CA1_samples
 
 
-# normalizing subfield wise 
+# Normalizing subfield wise 
 def get_count (sub, all_count):  
     subs = ['all', 'DG', 'CA3', 'CA1']  
     all_count = all_count[all_samples]
@@ -74,7 +74,6 @@ def normalizing (sub):
     return (Normalised, list(Normalised.index))
 
 
-# outlier 포함한 결과 asit 같음 
 out_all, out_all_genes = normalizing('all') 
 out_DG, out_DG_genes = normalizing('DG') 
 out_CA3, out_CA3_genes = normalizing('CA3')
@@ -110,7 +109,7 @@ candidategenes = [
 astrocytegenes = ["Aldh1a1", "Aldh1l1", "Aldh1l2", "Slc1a2", "Gfap", "Gjb6", "Fgfr3", "Aqp4", "Aldoc"]
 
 
-# barplot and heatmap 
+# Barplot and heatmap 
 
 pc1_label = r'Pearson Coef. PC1$^{\mathrm{memory}}$'
 
@@ -227,7 +226,7 @@ RNA_CA1.to_csv(datapath+'03.EXP_PC1_merge.CA1.csv')
 
 
 ###########
-# correlation of DEG and PCs
+# Correlation of DEG and PCs
 PC1_cor_list = []
 PC2_cor_list = []
 
@@ -365,7 +364,7 @@ tt_df.to_csv(datapath + '03.candidate_Ttest.csv')
 
 
 #####
-# fold change check 
+# Fold change check 
 
 fc_check = RNA_DG[RNA_DG_genes + ['training']].groupby('training').mean().T
 fc_check['FC'] = fc_check['trained'] - fc_check['yoked']

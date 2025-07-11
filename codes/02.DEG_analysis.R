@@ -20,13 +20,13 @@ library(gplots)
 library(ggplot2)
 
 
-font_add("Arial", regular = "C:/Windows/Fonts/arial.ttf")  # or mac 경로
+font_add("Arial", regular = "C:/Windows/Fonts/arial.ttf")  # or mac path
 showtext_auto()
 
-# most codes from Rayna Harris github
+# Most codes from Rayna Harris github : https://github.com/raynamharris/IntegrativeProjectWT2015
 
-# prep col data,
-outliers <- c("146D-DG-3", "145A-CA3-2", "146B-DG-2", "146D-CA1-3", "148B-CA1-4")
+# Prep col data,
+outliers <- c("146D-DG-3", "145A-CA3-2", "146B-DG-2", "146D-CA1-3", "148B-CA1-4") # pre-defined outliers
 
 colData <- read.csv(paste0(datapath, "/00_colData.csv"), header = T) %>%
     filter(!RNAseqID %in% outliers)
