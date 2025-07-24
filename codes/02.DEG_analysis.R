@@ -489,8 +489,17 @@ dev.off()
 # GO term overlap check 
 
 # LTP_Sanes_Lichtman
-LTP_Sanes_Lichtman = read.csv(paste0(datapath, "/02.sanesLichtman.csv"), header = T)
-LTP_Sanes_Lichtman2 = str_to_title(LTP_Sanes_Lichtman$gene)
+# LTP_Sanes_Lichtman = read.csv(paste0(datapath, "/02.sanesLichtman.csv"), header = T) # 237 
+LTP_Sanes_Lichtman = read.csv(paste0(datapath, "/02.sanesLichtman2.csv"), header = T) # newly downloaded from rayna's dissociation test data
+LTP_Sanes_Lichtman.genelist = LTP_Sanes_Lichtman$Related.Transcripts
+LTP_Sanes_Lichtman.genelist <- unlist(strsplit(LTP_Sanes_Lichtman.genelist, " "))
+LTP_Sanes_Lichtman.genelist = LTP_Sanes_Lichtman.genelist[LTP_Sanes_Lichtman.genelist != ""]
+LTP_Sanes_Lichtman.genelist = LTP_Sanes_Lichtman.genelist[LTP_Sanes_Lichtman.genelist != "NA"] # 249
+#  new : [1] "Adra1a" "Adra1b" "Adra1d" "Adcy10" "Adcy2"  "Adcy3"  "Adcy4"  "Adcy5" 
+#  [9] "Adcy6"  "Adcy7"  "Adcy8"  "Adcy9"  added 
+
+LTP_Sanes_Lichtman2 = sort(unique(str_to_title(LTP_Sanes_Lichtman.genelist)))
+
 
 DG_deg_table = DGe[DGe$direction != 'NS',]
 DG_deg_list = DG_deg_table$gene
