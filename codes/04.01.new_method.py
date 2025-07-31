@@ -120,46 +120,51 @@ candidategenes = ["Fos", "Fosl2", "Npas4", "Arc", "Grin1", "Gria1", 'Gria2', "Pi
 
 
 
-fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(3, 3))
+# see simple PCA to see train yoked spot 
+# fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(3, 3))
 
-axes.scatter(data = RNA_DG, x = 'PC1', y= 'PC2', 
-             c =RNA_DG.training.map({'yoked': 'gray','trained':'orangered'}), 
-             alpha = 0.7, s = 100 )
+# axes.scatter(data = RNA_DG, x = 'PC1', y= 'PC2', 
+#              c =RNA_DG.training.map({'yoked': 'gray','trained':'orangered'}), 
+#              alpha = 0.7, s = 100 )
 
-axes.set_xticklabels([])
-axes.set_yticklabels([])
-axes.set_xlabel('PC_mem')
-plt.tight_layout()
-plt.savefig(plotpath+'scat_only_ovlap.png', dpi=300)
-plt.savefig(plotpath+'scat_only_ovlap.eps', dpi=300)
-plt.savefig(plotpath+'scat_only_ovlap.pdf', dpi=300)
-
-
-
-RNA_DG_cop = copy.deepcopy(RNA_DG)
-RNA_DG_cop = RNA_DG_cop.sort_values('PC1')
-RNA_DG_cop['numbering'] = [a for a in range(14)]
-
-fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(3, 3))
-axes.scatter(data = RNA_DG_cop, x = 'PC1', y= 'PC2', 
-             c = RNA_DG_cop.training.map({'yoked': 'gray','trained':'orangered'}), 
-             alpha = 0.5, s = 100)
-
-for i in range(14) :
-    axes.text(x = RNA_DG_cop.loc[i,'PC1'], y= RNA_DG_cop.loc[i,'PC2'], 
-            s = RNA_DG_cop.loc[i,'numbering'], 
-            ha='center', va='center')
-            #transform=axes.transAxes)
+# axes.set_xticklabels([])
+# axes.set_yticklabels([])
+# axes.set_xlabel('PC_mem')
+# plt.tight_layout()
+# plt.savefig(plotpath+'04.scat_only_ovlap.png', dpi=300)
+# plt.savefig(plotpath+'04.scat_only_ovlap.eps', dpi=300)
+# plt.savefig(plotpath+'04.scat_only_ovlap.pdf', dpi=300)
+# plt.close()
 
 
-axes.set_xticklabels([])
-axes.set_yticklabels([])
-axes.set_xlabel('PC_mem')
-plt.tight_layout()
-plt.savefig(plotpath+'scat_only_ovlap2.png', dpi=300)
-plt.savefig(plotpath+'scat_only_ovlap2.eps', dpi=300)
-plt.savefig(plotpath+'scat_only_ovlap2.pdf', dpi=300)
 
+
+
+
+# RNA_DG_cop = copy.deepcopy(RNA_DG)
+# RNA_DG_cop = RNA_DG_cop.sort_values('PC1')
+# RNA_DG_cop['numbering'] = [a for a in range(14)]
+
+# fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(3, 3))
+# axes.scatter(data = RNA_DG_cop, x = 'PC1', y= 'PC2', 
+#              c = RNA_DG_cop.training.map({'yoked': 'gray','trained':'orangered'}), 
+#              alpha = 0.5, s = 100)
+
+# for i in range(14) :
+#     axes.text(x = RNA_DG_cop.loc[i,'PC1'], y= RNA_DG_cop.loc[i,'PC2'], 
+#             s = RNA_DG_cop.loc[i,'numbering'], 
+#             ha='center', va='center')
+#             #transform=axes.transAxes)
+
+
+# axes.set_xticklabels([])
+# axes.set_yticklabels([])
+# axes.set_xlabel('PC_mem')
+# plt.tight_layout()
+# plt.savefig(plotpath+'04.scat_only_ovlap2.png', dpi=300)
+# plt.savefig(plotpath+'04.scat_only_ovlap2.eps', dpi=300)
+# plt.savefig(plotpath+'04.scat_only_ovlap2.pdf', dpi=300)
+# plt.close()
 
 
 
@@ -302,7 +307,7 @@ plt.savefig(plotpath+'04.Rayleigh_check.pdf', dpi=300)
 plt.savefig(plotpath+'04.Rayleigh_check.eps', dpi=300)
 plt.savefig(plotpath+'04.Rayleigh_check.tiff', dpi=300)
 
-plt.show()
+plt.close()
 
 
 
@@ -406,6 +411,7 @@ plt.savefig(plotpath + '04.scatter_all.png', dpi = 300, bbox_inches='tight')
 plt.savefig(plotpath + '04.scatter_all.pdf', dpi = 300, bbox_inches='tight')
 plt.savefig(plotpath + '04.scatter_all.eps', dpi = 300, bbox_inches='tight')
 plt.savefig(plotpath + '04.scatter_all.tiff', dpi = 300, bbox_inches='tight')
+plt.close()
 # not gonna be width 7 inch 
 
 
@@ -598,6 +604,7 @@ datasets_1 = [
     ('04.all_relationship_GG_TRAINED.csv', '04.Louvain_1_iter1000_Trained.csv'),
 ]
 
+# this takes a while. each process takes ~10 minutes.
 for data in datasets_1 :
     data_read = pd.read_csv(datapath + data[0], index_col = 0)
     out_filename = data[1]
@@ -612,37 +619,6 @@ for data in datasets_1 :
 
 # Trained only
 # [(30, 20), (31, 908), (32, 72)]
-
-
-
-# # Merged_padding dataset to see the effect of added genes 
-
-datasets_2 = [('04.all_relationship_GG.csv','04.Louvain_1_iter1000.MERGE_PAD.csv'),
-              ('04.all_relationship_GG_YOKED.csv','04.Louvain_1_iter1000.YOKED_PAD.csv'),
-              ('04.all_relationship_GG_TRAINED.csv','04.Louvain_1_iter1000.TRAIN_PAD.csv')]
-
-datasets_2 = [('04.all_relationship_GG.csv','test1.csv'),
-              ('04.all_relationship_GG_YOKED.csv','test2.csv'),
-              ('04.all_relationship_GG_TRAINED.csv','test3.csv')]
-
-for data in datasets_2 :
-    new_candy = ['Grin1', 'Gria1', 'Gria2', 'Pick1', 'Nsf', 'Numb', 'Fmr1', 'Camk2a', 'Wwc1', 'Prkcb', 'Prkcz', 'Prkci']
-    data_read = pd.read_csv(datapath + data[0], index_col = 0)
-    out_filename = data[1]
-    pad_row_1 = list(data_read[data_read.geneA.isin(new_candy)].index)
-    pad_row_2 = list(data_read[data_read.geneB.isin(new_candy)].index)
-    pad_row = pad_row_1+pad_row_2    
-    for pad in pad_row : 
-        data_read.at[pad, 'SIGMA'] = 0 
-    #
-    graph_process(data_read, out_filename, n_iter, n_jobs)
-
-
-
-
-
-
-
 
 
 
@@ -713,6 +689,7 @@ plt.tight_layout()
 plt.savefig(plotpath+'04.Cluster_PC_spectrum.png', dpi = 300)
 plt.savefig(plotpath+'04.Cluster_PC_spectrum.eps', dpi = 300)
 plt.savefig(plotpath+'04.Cluster_PC_spectrum.pdf', dpi = 300)
+plt.close()
 # checked the 3 PC is enough to explain the variance 
 
 
@@ -781,7 +758,7 @@ def plot_3d_rgb (this_df, R_ratio, G_ratio, B_ratio) :
     ax.set_zlabel('PC3 ({:.2f}%)'.format(B_ratio*100))
     ax.view_init(elev=30, azim=90)
     plt.tight_layout()
-    plt.show()
+    plt.close()
 
 
 plot_3d_rgb(scores_Yo_df2, pca_all.explained_variance_ratio_[0], pca_all.explained_variance_ratio_[1], pca_all.explained_variance_ratio_[2])
@@ -894,7 +871,7 @@ def plot_yoked_vs_trained(df_yk, df_tr, R_ratio, G_ratio, B_ratio, title,
     ax2.view_init(elev=elev, azim=azim)
     plt.tight_layout()
     fig.canvas.mpl_connect('key_press_event', on_key)
-    plt.show()
+    plt.close()
 
 
 plot_yoked_vs_trained(
@@ -1068,7 +1045,7 @@ plt.tight_layout()
 plt.savefig(plotpath+'04.GO_for_same_module.png', dpi = 300)
 plt.savefig(plotpath+'04.GO_for_same_module.eps', dpi = 300)
 plt.savefig(plotpath+'04.GO_for_same_module.pdf', dpi = 300)
-plt.show()
+plt.close()
 
 
 
@@ -1241,7 +1218,7 @@ ax.set_ylabel('cent_sim')
 ax.set_zlabel('gene_sim')
 
 fig.canvas.mpl_connect('key_press_event', on_key2) # saved with j key 
-plt.show()
+plt.close()
 
 
 
@@ -1403,7 +1380,7 @@ def tsne_plot(random_state, perplexity, t_X) :
     )
     axs.set_title(f"random_state={random_state}, perplexity={perplexity}")
     axs.set_xticks([]); axs.set_yticks([])
-    plt.show()
+    plt.close()
 
 
 tsne_plot(42, 60, t_X)
@@ -1466,7 +1443,7 @@ def TSNE_final (TSNE_select, col_select) :
     plt.savefig(plotpath+'04.TSNE_col_{}.png'.format(col_select), dpi = 300)
     plt.savefig(plotpath+'04.TSNE_col_{}.eps'.format(col_select), dpi = 300)
     plt.savefig(plotpath+'04.TSNE_col_{}.pdf'.format(col_select), dpi = 300)
-    plt.close()
+    plt.show()
 
 
 

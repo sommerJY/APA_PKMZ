@@ -263,6 +263,7 @@ PC1_df[PC1_df['p-value'] <= 0.05] # 247
 # to gprofiler web 
 PC1_df_pos = PC1_df[PC1_df['PC1 PCor'] >0]
 
+# result from gprofiler web 
 gprof_web_res = pd.read_csv(datapath+'03.gProfiler_DEG_PCpositive.csv')
 gprof_web_res['intersection_re'] = gprof_web_res['intersections'].apply(lambda x : ', '.join([a[0].upper()+a[1:].lower() for a in  x.split(',')]))
 gprof_web_res_re = gprof_web_res[['source','term_name','term_size','intersection_size', 'intersection_re']]

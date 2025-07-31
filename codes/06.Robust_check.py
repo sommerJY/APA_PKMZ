@@ -121,7 +121,7 @@ axes.set_yscale('log')
 axes.set_xlabel('Gene')
 axes.set_ylabel('KLD_score')
 plt.savefig(plotpath+'06.KLD_DEG_check.png', dpi = 300)
-plt.show()
+plt.close()
 
 
 
@@ -266,7 +266,7 @@ ax.legend(handles=legend_elements,
 # plt.show()
 
 plt.savefig(plotpath + '06.Robust_3D.png', dpi=300)
-
+plt.close()
 
 
 

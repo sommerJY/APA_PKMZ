@@ -185,7 +185,7 @@ def plot_3d_rgb_anchor (this_df, choose_color ='hls_val') :
     ax.set_zlabel('B')
     ax.view_init(elev=30, azim=90)
     plt.tight_layout()
-    plt.show()
+    plt.close()
 
 
 
@@ -242,7 +242,6 @@ def topGO_cluster(cluster_gene, name, color) :
     plt.savefig(plotpath+'04.GO_for_'+name+'.png', dpi = 300)
     plt.savefig(plotpath+'04.GO_for_'+name+'.eps', dpi = 300)
     plt.savefig(plotpath+'04.GO_for_'+name+'.pdf', dpi = 300)
-    #plt.show()
     plt.close()
     return res
 

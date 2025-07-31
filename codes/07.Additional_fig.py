@@ -101,7 +101,7 @@ plt.tight_layout()
 plt.savefig(plotpath +'07.example_scatter.png', dpi = 300)
 plt.savefig(plotpath +'07.example_scatter.pdf', dpi = 300)
 
-plt.show()
+plt.close()
 
 
 
@@ -148,7 +148,7 @@ for loc in ["top", "right"]:
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 plt.savefig(plotpath +'07.example_scatter_score.png', dpi = 300)
 plt.savefig(plotpath +'07.example_scatter_score.pdf', dpi = 300)
-plt.show()
+plt.close()
 
 
 
@@ -186,7 +186,7 @@ for id, colname, renames in zip(ids, col_names, col_renames) :
 plt.tight_layout()
 plt.savefig(plotpath +'07.data_scatter.png', dpi = 300)
 plt.savefig(plotpath +'07.data_scatter.pdf', dpi = 300)
-
+plt.close()
 
 # Plot the results
 fig, ax = plt.subplots(figsize=(18, 3), constrained_layout=True)
@@ -209,6 +209,6 @@ for loc in ["top", "right"]:
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 plt.savefig(plotpath +'07.data_scatter_score.png', dpi = 300)
 plt.savefig(plotpath +'07.data_scatter_score.pdf', dpi = 300)
-plt.show()
+plt.close()
 
 

@@ -142,7 +142,7 @@ plt.savefig(plotpath + '01.bhv_shock.png', dpi = 300)
 plt.savefig(plotpath + '01.bhv_shock.pdf', dpi = 300, bbox_inches='tight')
 plt.savefig(plotpath + '01.bhv_shock.tiff', dpi = 300, bbox_inches='tight')
 plt.savefig(plotpath + '01.bhv_shock.eps', dpi = 300, bbox_inches='tight')
-plt.show()
+plt.close()
 
 
 
@@ -229,7 +229,7 @@ plt.savefig(plotpath+'01.PC_original.png', dpi = 300)
 plt.savefig(plotpath+'01.PC_original.pdf', dpi = 300)
 plt.savefig(plotpath+'01.PC_original.tiff', dpi = 300)
 plt.savefig(plotpath+'01.PC_original.eps', dpi = 300)
-plt.show()
+plt.close()
 
 
 
@@ -256,7 +256,7 @@ plt.savefig(plotpath+'01.PC_series.pdf', dpi = 300)
 plt.savefig(plotpath+'01.PC_series.tiff', dpi = 300)
 plt.savefig(plotpath+'01.PC_series.eps', dpi = 300)
 
-plt.show()
+plt.close()
 
 
 
