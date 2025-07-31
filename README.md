@@ -4,8 +4,8 @@
 This repository contains the analysis code and data for the *Active Place Avoidance (APA)* experiment, integrating behavioral and bulk RNA-seq datasets from mice.
 
 Experimental and biological details are described in the accompanying manuscript : 
-Persistently increased expression of PKMζ and unbiased gene expression profiles identify hippocampal molecular traces of a long-term active place avoidance memory and ‘shadow’ proteins.
-(https://www.biorxiv.org/content/10.1101/2025.04.28.651143v2)
+_Persistently increased expression of PKMζ and unbiased gene expression profiles identify hippocampal molecular traces of a long-term active place avoidance memory and ‘shadow’ proteins.
+_(https://www.biorxiv.org/content/10.1101/2025.04.28.651143v2)
 
 > **Note**: Some previous codes written by Rayna Harris (https://github.com/raynamharris/IntegrativeProjectWT2015) are not included here.  
 > For example, the UNIX scripts used to process the raw RNA-seq data on the Stampede cluster at the Texas Advanced Computing Facility are excluded.
