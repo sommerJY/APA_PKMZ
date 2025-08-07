@@ -77,7 +77,6 @@ enableWGCNAThreads(nThreads = NULL)
 
 
 # check threshold
-# 이미 내 데이터가 있다는 것을 명시하면 된다고 함 
 ST_all <- pickSoftThreshold(data_all_exp) 
 ST_ext <- pickSoftThreshold(data_ext_exp) 
 
@@ -85,7 +84,7 @@ ST_ext <- pickSoftThreshold(data_ext_exp)
 
 # 
 scale_ind_plot = function(ST, name) {
-    png(paste0(plotpath,"05.scale_independence_", name,".png"), width = 800, height = 600, res=300)  # PNG 파일 설정
+    png(paste0(plotpath,"05.scale_independence_", name,".png"), width = 800, height = 600, res=300)  #
     par(mar=c(0.2,1,0.4,0.2)) 
     par(oma=c(2,1,0,0))
     plot(ST$fitIndices[,1], ST$fitIndices[,2],
@@ -105,8 +104,8 @@ scale_ind_plot(ST_ext, 'EXT')
 
 # 
 mean_conn_plot = function(ST, name) {
-    png(paste0(plotpath,"05.mean_connectivity_", name,".png"), width = 800, height = 600, res=300)  # PNG 파일 설정
-    par(mar=c(0.2,1,0.4,0.2))  # 마진 조정 (기본값이 더 적절함)
+    png(paste0(plotpath,"05.mean_connectivity_", name,".png"), width = 800, height = 600, res=300)  #
+    par(mar=c(0.2,1,0.4,0.2))  #
     par(oma=c(2,1,0,0))
     plot(ST$fitIndices[,1], ST$fitIndices[,5],
         xlab = "Soft Threshold (power)",
@@ -115,7 +114,7 @@ mean_conn_plot = function(ST, name) {
         main = paste0("Mean connectivity", name) ,
         cex.lab=0.3, cex.axis=0.3, cex.main=0.3, cex.sub=0.3)
     text(ST$fitIndices[,1], ST$fitIndices[,5], labels = ST$fitIndices[,1], col = "red", cex = 0.8)
-    dev.off()  # 파일 저장 완료
+    dev.off()  #
 }
 
 mean_conn_plot(ST_all, 'ALL')
@@ -157,7 +156,7 @@ moduleFact_plot_png = function(module.trait.correlation, textMatrix, allTraits, 
     par(oma=c(2,2,1,1))
     labeledHeatmap(Matrix = module.trait.correlation,
     xLabels = names(allTraits),
-    yLabels = gsub("^ME", "", names(MEs)),   # <--- ME 제거
+    yLabels = gsub("^ME", "", names(MEs)),   # 
     ySymbols = gsub("^ME", "", names(MEs)),
     colorLabels = FALSE,
     colors = blueWhiteRed(50),
@@ -175,7 +174,7 @@ moduleFact_plot_pdf = function(module.trait.correlation, textMatrix, allTraits, 
     labeledHeatmap(
     Matrix = module.trait.correlation,
     xLabels = names(allTraits),
-    yLabels = gsub("^ME", "", names(MEs)),   # <--- ME 제거
+    yLabels = gsub("^ME", "", names(MEs)),   #
     ySymbols = gsub("^ME", "", names(MEs)),
     colorLabels = FALSE,
     colors = blueWhiteRed(50),
@@ -267,7 +266,7 @@ for (i in 1:nrow(all_pair)) {
     gene2 <- all_pair$geneB[i]
     PCOR2_score <- all_pair$PCOR2[i]
     if (gene1 == gene2) {
-        PCC_matrix[gene1, gene2] <- 1  # 같은 gene인 경우 1을 넣음
+        PCC_matrix[gene1, gene2] <- 1  # same gene 
     } else {
         PCC_matrix[gene1, gene2] <- PCOR2_score
         PCC_matrix[gene2, gene1] <- PCOR2_score  # Symmetric matrix        
