@@ -25,6 +25,9 @@ The repository is organized into the following main directories:
 
 ---
 
+![FigS12 Pipeline](https://github.com/user-attachments/assets/b4e7cfc0-8521-4f78-9983-fe5a9783f0bd)
+
+
 ## Analysis Overview
 
 ### Part 1: Behavioral Analysis
