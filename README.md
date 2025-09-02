@@ -47,7 +47,7 @@ The repository is organized into the following main directories:
   - `codes/04.01.new_method`: Main analysis pipeline for generating linear/non-linear correlation scores and Louvain clustering.
   - `codes/04.02.anchor_based_method`: Computes co-cluster probabilities based on anchor genes (Arc, Nsf, Prkcz).
   - `codes/06.Robust_check`: Assesses the robustness of DEG-based rankings using three independent metrics.
-  - `codes/07.Additional_fig`: Generates supplementary figures.
+  - `codes/07.Additional_fig`: Generates some supplementary figures.
 
 - **Language**: R  
 - **Script**:
