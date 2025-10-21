@@ -25,6 +25,9 @@ The repository is organized into the following main directories:
 
 ---
 
+![FigS12 Pipeline](https://github.com/user-attachments/assets/b4e7cfc0-8521-4f78-9983-fe5a9783f0bd)
+
+
 ## Analysis Overview
 
 ### Part 1: Behavioral Analysis
@@ -44,7 +47,7 @@ The repository is organized into the following main directories:
   - `codes/04.01.new_method`: Main analysis pipeline for generating linear/non-linear correlation scores and Louvain clustering.
   - `codes/04.02.anchor_based_method`: Computes co-cluster probabilities based on anchor genes (Arc, Nsf, Prkcz).
   - `codes/06.Robust_check`: Assesses the robustness of DEG-based rankings using three independent metrics.
-  - `codes/07.Additional_fig`: Generates supplementary figures.
+  - `codes/07.Additional_fig`: Generates some supplementary figures.
 
 - **Language**: R  
 - **Script**:
