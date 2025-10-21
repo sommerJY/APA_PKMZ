@@ -9,7 +9,7 @@ from scipy.optimize import curve_fit
 from scipy.stats import norm
 from joblib import Parallel, delayed
 import matplotlib.colors as mcolors
-from matplotlib.colors import LinearSegmentedColormap, to_hex
+from matplotlib.colors import LinearSegmentedColormap, to_hex, to_rgba, to_rgb
 import matplotlib.patches as mpatches
 from matplotlib.legend_handler import HandlerPatch
 import networkx as nx
@@ -25,6 +25,16 @@ import colorsys
 from sklearn.metrics.pairwise import cosine_similarity
 from matplotlib import rcParams
 import os 
+
+import numpy as np
+import pandas as pd
+import networkx as nx
+from sklearn.metrics import silhouette_score
+from sklearn.metrics.pairwise import cosine_similarity
+import matplotlib.pyplot as plt
+import markov_clustering as mc
+import plotly.graph_objects as go
+import kaleido
 
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation, PillowWriter
@@ -996,6 +1006,8 @@ plot_clustermap(diff_candy, f'04.clustermap_TR_min_YO.candy', vmin=-1, vmax=1, c
 
 
 
+
+
 # Gprofiler to check some cluster to see the GO term 
 
 import numpy as np
@@ -1046,6 +1058,395 @@ plt.savefig(plotpath+'04.GO_for_same_module.png', dpi = 300)
 plt.savefig(plotpath+'04.GO_for_same_module.eps', dpi = 300)
 plt.savefig(plotpath+'04.GO_for_same_module.pdf', dpi = 300)
 plt.close()
+
+
+
+
+
+
+
+# how about separate cluster analysis? 
+
+
+CAP_T_data1 = copy.deepcopy(clust_Trained)
+CAP_T_data2 = copy.deepcopy(clust_Yoked)
+
+
+def run_mcl_on_cap(cap_matrix, inflation_values, name, TP, condition_name, verbose=False, plot=True):
+    # graph based on similarity 
+    sim_matrix = cap_matrix.fillna(0)   # NaN 
+    G = nx.from_numpy_array(sim_matrix.values)
+    mapping = dict(enumerate(sim_matrix.index))
+    G = nx.relabel_nodes(G, mapping)
+    node_list = list(sim_matrix.index)
+    results = []
+    # 
+    for infl in inflation_values:
+        adj = nx.to_numpy_array(G, nodelist=node_list)
+        result = mc.run_mcl(adj, inflation=infl)
+        clusters = mc.get_clusters(result)
+        # gene → cluster label
+        labels_dict = {gene: -1 for gene in node_list}
+        for cluster_id, cluster in enumerate(clusters):
+            for idx in cluster:
+                gene = node_list[idx]
+                labels_dict[gene] = cluster_id
+        # Intra-cluster similarity
+        intra_sims = []
+        for cluster in clusters:
+            if len(cluster) < 2:
+                continue
+            genes_in_cluster = [node_list[i] for i in cluster]
+            submat = sim_matrix.loc[genes_in_cluster, genes_in_cluster].values
+            mean_sim = np.mean(submat[np.triu_indices(len(genes_in_cluster), k=1)])
+            intra_sims.append(mean_sim)
+        avg_intra_sim = np.mean(intra_sims) if intra_sims else np.nan
+        # Silhouette score check 
+        label_array = np.array([labels_dict[gene] for gene in sim_matrix.index])
+        unique, counts = np.unique(label_array, return_counts=True) # one node cluster removal
+        valid_clusters = unique[counts > 1]  # only use cluster with more than 2 
+        valid_clusters = [a for a in valid_clusters if a != -1]
+        mask = np.isin(label_array, valid_clusters)
+        if len(np.unique(label_array[mask])) > 1:  # need at least 2 clusters 
+            dist_matrix = 1 - sim_matrix.values # check distance 
+            dist_matrix = np.maximum(0, dist_matrix)
+            dist_matrix = np.nan_to_num(dist_matrix, nan=1.0)
+            sil_score = silhouette_score(dist_matrix[mask][:,mask],
+                                        label_array[mask],
+                                        metric='precomputed') 
+        else:
+            sil_score = np.nan
+        if verbose:
+            print(f"[Infl={infl:.2f}] Clusters={len(clusters)} "
+                    f"| IntraSim={avg_intra_sim:.3f} | Silhouette={sil_score:.3f}")
+        results.append({
+            "inflation": infl,
+            "num_clusters": len(clusters),
+            "avg_intra_similarity": avg_intra_sim,
+            "silhouette_score": sil_score
+        })
+    results_df = pd.DataFrame(results)
+    if plot:
+        plot_mcl_results(results_df, plotpath, name, TP, condition_name)
+    return results_df
+
+
+
+def plot_mcl_results(results_df, plotpath, name, TP, condition_name):
+    fig, ax1 = plt.subplots(figsize=(7,5))
+    ax1.set_title(f"{name}_{TP}_{condition_name}")
+    ax1.set_xlabel("Inflation")
+    ax1.set_ylabel("Intra-cluster similarity", color="blue")
+    ax1.plot(results_df["inflation"], results_df["avg_intra_similarity"],
+                "-o", color="blue", label="Intrasimilarity")
+    ax1.tick_params(axis="y", labelcolor="blue")
+    ax2 = ax1.twinx()
+    ax2.set_ylabel("Silhouette", color="red")
+    ax2.plot(results_df["inflation"], results_df["silhouette_score"],
+                "-s", color="red", label="Silhouette")
+    ax2.tick_params(axis="y", labelcolor="red")
+    # num of cluster
+    for i, row in results_df.iterrows():
+        if not np.isnan(row['avg_intra_similarity']):
+            ax1.annotate(f"{int(row['num_clusters'])}",
+                            (row['inflation'], row['avg_intra_similarity']),
+                            textcoords="offset points", xytext=(-5,5), 
+                            ha='center', fontsize=8)
+        if not np.isnan(row['silhouette_score']):
+            ax2.annotate(f"{int(row['num_clusters'])}",
+                            (row['inflation'], row['silhouette_score']),
+                            textcoords="offset points", xytext=(-5,5), 
+                            ha='center', fontsize=8)
+    plt.tight_layout()
+    plt.savefig(plotpath+f"04.infl_check_{name}_{condition_name}.jpg", dpi=300)
+    plt.savefig(plotpath+f"04.infl_check_{name}_{condition_name}.pdf", dpi=300)
+    plt.close()
+
+
+
+
+# Transcriptome 
+inflation_range = [np.round(i * 0.25, 2) for i in range(5, 30)]
+mcl_DATA1_results = run_mcl_on_cap(CAP_T_data1, inflation_range, name='Trained', TP='T', condition_name='CAP', verbose=True, plot=True)
+mcl_DATA2_results = run_mcl_on_cap(CAP_T_data2, inflation_range, name='Yoked', TP='T', condition_name='CAP', verbose=True, plot=True)
+#mcl_DATA_12_results = run_mcl_on_cap(CAP_T_latter_former, inflation_range, name=this_name, TP='T', condition_name=comp_name+'_dCAP', verbose=True, plot=True)
+
+
+
+
+
+
+
+
+def choose_infl_G (cap_matrix, infl):
+    sim_matrix = cap_matrix.fillna(0)   # NaN safe
+    G = nx.from_numpy_array(sim_matrix.values)
+    mapping = dict(enumerate(sim_matrix.index))
+    G = nx.relabel_nodes(G, mapping)
+    node_list = list(sim_matrix.index)
+    n_nodes = len(node_list)
+    #
+    adj = nx.to_numpy_array(G, nodelist=node_list)
+    result = mc.run_mcl(adj, inflation=infl)
+    clusters = mc.get_clusters(result)
+    print('original num nodes : ', n_nodes)
+    print('after mcl num nodes : ', sum([len(a) for a in clusters]))
+    print('num clusters : ', len(clusters))
+    # Make gene → cluster_id label dict
+    labels_dict = {gene: -1 for gene in node_list}
+    for cluster_id, cluster in enumerate(clusters):
+        for idx in cluster:
+            gene = node_list[idx]
+            labels_dict[gene] = cluster_id
+    #
+    labels_dict_df = pd.DataFrame(labels_dict, index = [0]).T
+    labels_dict_df.columns = ['cluster']
+    print(labels_dict_df[labels_dict_df.index.isin(candidategenes)].sort_values('cluster'))
+    return labels_dict_df
+
+
+
+
+inflation = 6.0
+T_data1_labels_df = choose_infl_G(CAP_T_data1, inflation)
+T_data2_labels_df = choose_infl_G(CAP_T_data2, inflation)
+
+T_data1_labels_df.to_csv(datapath + '04.after_mcl_trained_labels.csv')
+T_data2_labels_df.to_csv(datapath + '04.after_mcl_yoked_labels.csv')
+# T_data1_labels_df = pd.read_csv(datapath + '04.after_mcl_trained_labels.csv', index_col = 0)
+# T_data2_labels_df = pd.read_csv(datapath + '04.after_mcl_yoked_labels.csv', index_col = 0)
+
+
+T_data1_candy = T_data1_labels_df[T_data1_labels_df.index.isin(candidategenes)]
+T_data2_candy = T_data2_labels_df[T_data2_labels_df.index.isin(candidategenes)]
+
+T_cluster_genes_1 = T_data1_candy.groupby("cluster").groups
+T_cluster_genes_2 = T_data2_candy.groupby("cluster").groups
+
+
+label_trained = copy.deepcopy(T_data1_labels_df)
+label_yoked = copy.deepcopy(T_data2_labels_df)
+label_trained.columns = ['trained_cluster']
+label_yoked.columns = ['yoked_cluster']
+label_both = pd.merge(label_trained, label_yoked, left_index=True, right_index=True, how='left')
+trained_sizes = label_trained.groupby('trained_cluster').size()
+yoked_sizes = label_yoked.groupby('yoked_cluster').size()
+
+yoked_row_colors = {i: plt.get_cmap("Set2")(i) for i in range(len(yoked_sizes))}
+trained_row_colors = {i: 'gray' for i in range(len(trained_sizes))}
+
+label_yoked['colors'] = label_yoked.yoked_cluster.map(yoked_row_colors)
+label_trained['colors'] = label_trained.trained_cluster.map(trained_row_colors)
+
+
+
+
+def plot_clustermap_CAP_check(matrix, candygenes, plotpath, filename, 
+                              label_df, cmap='bwr', vmin=-1, vmax=1, center=0):
+    new_order = []
+    max_cluster = max(label_df.iloc[:,0])
+    for cluster in range(max_cluster):
+        cluster_genes = label_df[label_df.iloc[:,0] == cluster].index.tolist()
+        if len(cluster_genes) > 1:
+            cluster_matrix = matrix.loc[cluster_genes, cluster_genes]
+            small_clustermap = sns.clustermap(cluster_matrix, figsize=(7, 7), vmin=vmin, vmax=vmax, center=center,
+                                              method='complete', metric='correlation', cmap=cmap,cbar_pos = None,
+                                              linewidths=0, linecolor='white')
+            this_row_order = list(small_clustermap.data2d.index)
+            new_order += this_row_order
+            plt.close()
+        else :
+            new_order += cluster_genes
+    #
+    label_df_re = label_df.loc[new_order, :]    
+    row_colors = label_df_re['colors'].values
+    matrix_clean = matrix.loc[new_order, new_order]
+    g = sns.clustermap(matrix_clean, figsize=(7, 7), vmin=vmin, vmax=vmax, center=center,
+                       cmap=cmap, row_colors = row_colors, cbar_pos = None, col_colors = row_colors,
+                       col_cluster=False, row_cluster=False,
+                       linewidths=0, linecolor='white')
+    new_xticklabels = [label if label in candygenes else '' for label in g.data2d.columns]
+    new_yticklabels = [label if label in candygenes else '' for label in g.data2d.index]
+    g.ax_heatmap.set_xticks([])
+    g.ax_heatmap.set_xticklabels([])
+    g.ax_heatmap.set_yticks(np.arange(len(new_yticklabels)) + 0.5)
+    g.ax_heatmap.set_yticklabels(new_yticklabels, rotation=0)
+    g.ax_row_dendrogram.set_visible(False)
+    g.ax_col_dendrogram.set_visible(False)
+    g.ax_heatmap.set_aspect('auto')
+    # remove left color bar for cmap 
+    plt.tight_layout()
+    plt.savefig(plotpath + "04.cl_map_no_{}.jpg".format(filename), dpi=300, bbox_inches='tight')
+    plt.savefig(plotpath + "04.cl_map_no_{}.pdf".format(filename), dpi=300, bbox_inches='tight')
+    plt.close()
+
+
+
+plot_clustermap_CAP_check(CAP_T_data1, candidategenes, plotpath, 'Trained', label_trained, cmap = 'bwr')
+plot_clustermap_CAP_check(CAP_T_data2, candidategenes, plotpath, 'Yoked', label_yoked, cmap = 'bwr')
+
+
+
+# shankey plot 
+
+movement = label_both.groupby(['yoked_cluster','trained_cluster']).size().reset_index(name='count')
+
+# remove single cluster 
+
+movement2 = movement[movement['count']>1]
+
+movement2['yoked_cluster'] = 'L' + movement2['yoked_cluster'].astype(str)
+movement2['trained_cluster'] = 'R' + movement2['trained_cluster'].astype(str)
+
+whole_labels = list(movement2.yoked_cluster.unique()) + list(movement2.trained_cluster.unique())
+movement2['yoked_index'] = movement2.yoked_cluster.map(lambda x: whole_labels.index(x))
+movement2['trained_index'] = movement2.trained_cluster.map(lambda x: whole_labels.index(x))
+
+
+sources = movement2.yoked_index.values
+targets = movement2.trained_index.values
+values  = movement2['count'].values
+
+yoked_row_colors2 = {f"L{k}": tuple(int(255*a) for a in to_rgba(v)[0:3]) + (1,) for k, v in yoked_row_colors.items()}
+yoked_row_colors3 = {f"L{k}": tuple(int(255*a) for a in to_rgba(v)[0:3]) + (0.4,) for k, v in yoked_row_colors.items()}
+
+
+
+def top_genes(gene_dict, num):
+    if num in gene_dict.keys():
+        cand_list = gene_dict[num]
+    else:
+        cand_list = []
+    return ", ".join(cand_list)
+
+
+
+# 색상 팔레트
+
+fig = go.Figure(data=[go.Sankey(
+    node=dict(
+        pad=15,
+        thickness=20,
+        line=dict(color="black", width=0.5),
+        label=whole_labels,
+        color=[
+            'rgba' +str(yoked_row_colors2[label]) if (label.startswith("L")) else 'rgba(128,128,128,1)'
+            for label in whole_labels
+        ]
+    ),
+    link=dict(
+        source=sources,
+        target=targets,
+        value=values,
+        color=[
+            'rgba' +str(yoked_row_colors3[label]) if label.startswith("L") else 'rgba(128,128,128,0.4)'  
+            for label in [whole_labels[i] for i in sources]
+        ]
+    )
+)])
+
+
+fig.write_html(plotpath+"04.sankey_CAP_check.html")
+fig.write_image(plotpath + '04.sankey_CAP_check.pdf', width=1000 , height=1000, scale=1)
+fig.write_image(plotpath + '04.sankey_CAP_check.jpg', width=1000, height=1000, scale=1)
+
+
+
+
+
+
+
+# check original values and their correlation according to CAP clusters
+
+RNA_DG = pd.read_csv(datapath+'03.EXP_PC1_merge.DG.csv', index_col = 0)
+
+RNA_DG_trained = RNA_DG[RNA_DG.training == 'trained']
+RNA_DG_yoked = RNA_DG[RNA_DG.training == 'yoked']
+
+
+def plot_subgroup_corr(RNA_DG_trained, RNA_DG_yoked, subgroup_genes, plotpath, basedon, num):
+    train_sub = RNA_DG_trained[subgroup_genes]
+    yoked_sub = RNA_DG_yoked[subgroup_genes]
+    corr_train = train_sub.corr(method="pearson")
+    corr_yoked = yoked_sub.corr(method="pearson")
+    cg_ref_yoked = sns.clustermap(
+        corr_yoked.fillna(0),
+        cmap="bwr", center=0, vmin=-1, vmax=1,
+        figsize=(6, 6), cbar=False
+    )
+    cg_ref_trained = sns.clustermap(
+        corr_train.fillna(0),
+        cmap="bwr", center=0, vmin=-1, vmax=1,
+        figsize=(6, 6),
+        cbar=False
+    )
+    # row/col order check
+    order_yoked = cg_ref_yoked.dendrogram_row.reordered_ind
+    order_trained = cg_ref_trained.dendrogram_row.reordered_ind
+    ordered_genes_yoked = [corr_yoked.index[i] for i in order_yoked]
+    ordered_genes_trained = [corr_train.index[i] for i in order_trained]
+    # fixed order 
+    fig, axes = plt.subplots(2, 2, figsize=(12, 12))
+    sns.heatmap(
+        corr_yoked.loc[ordered_genes_yoked, ordered_genes_yoked],
+        cmap="bwr", vmin=-1, vmax=1, center=0, cbar=False,
+        ax=axes[0][0]
+    )
+    axes[0][0].set_title("Yoked")
+    sns.heatmap(
+        corr_train.loc[ordered_genes_yoked, ordered_genes_yoked],
+        cmap="bwr", vmin=-1, vmax=1, center=0, cbar=False,
+        ax=axes[0][1]
+    )
+    axes[0][1].set_title("Trained")
+    sns.heatmap(
+        corr_yoked.loc[ordered_genes_trained, ordered_genes_trained],
+        cmap="bwr", vmin=-1, vmax=1, center=0, cbar=False,
+        ax=axes[1][0]
+    )
+    sns.heatmap(
+        corr_train.loc[ordered_genes_trained, ordered_genes_trained],
+        cmap="bwr", vmin=-1, vmax=1, center=0, cbar=False,
+        ax=axes[1][1]
+    )
+    for ax in axes.flatten():
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+    plt.tight_layout()
+    plt.savefig(plotpath + '04.subgroup_corr.{}_{}.jpg'.format(basedon, num), dpi = 300)
+    plt.savefig(plotpath + '04.subgroup_corr.{}_{}.pdf'.format(basedon, num), dpi = 300)
+    plt.close()
+
+
+
+# train first 
+num_check = T_data1_labels_df.groupby('cluster').size()
+num_check = num_check[num_check > 1]
+
+for num in list(num_check.index):
+    subgroup_genes = list(T_data1_labels_df[T_data1_labels_df.cluster == num].index)
+    plot_subgroup_corr(RNA_DG_trained, RNA_DG_yoked, subgroup_genes, plotpath, 'trainBase', num)
+
+
+# yoked second 
+num_check = T_data2_labels_df.groupby('cluster').size()
+num_check = num_check[num_check > 1]
+
+for num in list(num_check.index):
+    subgroup_genes = list(T_data2_labels_df[T_data2_labels_df.cluster == num].index)
+    plot_subgroup_corr(RNA_DG_trained, RNA_DG_yoked, subgroup_genes, plotpath, 'yokedBase', num)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
