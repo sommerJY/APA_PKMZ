@@ -1067,18 +1067,22 @@ plt.close()
 
 # how about separate cluster analysis? 
 
-
 CAP_T_data1 = copy.deepcopy(clust_Trained)
 CAP_T_data2 = copy.deepcopy(clust_Yoked)
 
 
+
 def run_mcl_on_cap(cap_matrix, inflation_values, name, TP, condition_name, verbose=False, plot=True):
-    # graph based on similarity 
-    sim_matrix = cap_matrix.fillna(0)   # NaN 
-    G = nx.from_numpy_array(sim_matrix.values)
-    mapping = dict(enumerate(sim_matrix.index))
+    # graph based on similarity setup
+    cap_matrix = cap_matrix.fillna(0)   # NaN 
+    sim_matrix = cosine_similarity(cap_matrix)
+    sim_matrix = pd.DataFrame(sim_matrix, index=cap_matrix.index, columns=cap_matrix.index)
+    #
+    # make graph of cap matrix 
+    G = nx.from_numpy_array(cap_matrix.values)
+    mapping = dict(enumerate(cap_matrix.index))
     G = nx.relabel_nodes(G, mapping)
-    node_list = list(sim_matrix.index)
+    node_list = list(cap_matrix.index)
     results = []
     # 
     for infl in inflation_values:
@@ -1091,16 +1095,19 @@ def run_mcl_on_cap(cap_matrix, inflation_values, name, TP, condition_name, verbo
             for idx in cluster:
                 gene = node_list[idx]
                 labels_dict[gene] = cluster_id
+        #
         # Intra-cluster similarity
         intra_sims = []
         for cluster in clusters:
             if len(cluster) < 2:
                 continue
             genes_in_cluster = [node_list[i] for i in cluster]
+            # get from similarity 
             submat = sim_matrix.loc[genes_in_cluster, genes_in_cluster].values
             mean_sim = np.mean(submat[np.triu_indices(len(genes_in_cluster), k=1)])
             intra_sims.append(mean_sim)
         avg_intra_sim = np.mean(intra_sims) if intra_sims else np.nan
+        #
         # Silhouette score check 
         label_array = np.array([labels_dict[gene] for gene in sim_matrix.index])
         unique, counts = np.unique(label_array, return_counts=True) # one node cluster removal
@@ -1129,6 +1136,14 @@ def run_mcl_on_cap(cap_matrix, inflation_values, name, TP, condition_name, verbo
     if plot:
         plot_mcl_results(results_df, plotpath, name, TP, condition_name)
     return results_df
+
+
+
+
+
+
+
+
 
 
 
@@ -1166,7 +1181,7 @@ def plot_mcl_results(results_df, plotpath, name, TP, condition_name):
 
 
 # Transcriptome 
-inflation_range = [np.round(i * 0.25, 2) for i in range(5, 30)]
+inflation_range = [np.round(i * 0.5, 2) for i in range(5, 30)]
 mcl_DATA1_results = run_mcl_on_cap(CAP_T_data1, inflation_range, name='Trained', TP='T', condition_name='CAP', verbose=True, plot=True)
 mcl_DATA2_results = run_mcl_on_cap(CAP_T_data2, inflation_range, name='Yoked', TP='T', condition_name='CAP', verbose=True, plot=True)
 #mcl_DATA_12_results = run_mcl_on_cap(CAP_T_latter_former, inflation_range, name=this_name, TP='T', condition_name=comp_name+'_dCAP', verbose=True, plot=True)
@@ -1356,6 +1371,16 @@ fig.write_image(plotpath + '04.sankey_CAP_check.jpg', width=1000, height=1000, s
 
 
 
+
+
+
+
+
+
+
+
+
+
 # check original values and their correlation according to CAP clusters
 
 RNA_DG = pd.read_csv(datapath+'03.EXP_PC1_merge.DG.csv', index_col = 0)
@@ -1438,19 +1463,87 @@ for num in list(num_check.index):
 
 
 
+# small subnetwork interaction check for my own
+
+
+candy_DG_trained = RNA_DG_trained[candidategenes]
+candy_DG_yoked = RNA_DG_yoked[candidategenes]
+
+candy_DG_trained_corr = candy_DG_trained.corr(method="pearson")
+candy_DG_yoked_corr = candy_DG_yoked.corr(method="pearson")
+
+Y2 = ['Arc','Fos','Fosl2','Gria1','Npas4','Numb']
+Y0 = ['Gria2','Nsf','Pick1','Wwc1']
+Y3 = ['Fmr1','Prkcb','Prkci']
+Y1 = ['Grin1']
+Y5 = ['Camk2a','Prkcz']
+
+T0 = ['Fos','Fosl2','Npas4','Numb','Wwc1']
+T1 = ['Arc','Camk2a','Grin1', 'Nsf', 'Pick1', 'Gria2', 'Fmr1', 'Prkcb', 'Prkci']
+T3 = ['Gria1','Prkcz']
+
+subset_list_Yoked = [Y2, Y0, Y3, Y1, Y5]
+subset_list_Trained = [T0, T1, T3]
+
+for subset in subset_list_Yoked:
+    G = nx.Graph()
+    for gene in subset:
+        G.add_node(gene)
+    for gene in subset:
+        for gene2 in subset:
+            if gene != gene2:
+                weight = candy_DG_yoked_corr.loc[gene, gene2]
+                G.add_edge(gene, gene2, weight=weight)
+    edge_colors = [G[u][v]['weight'] for u, v in G.edges()]
+    fig, ax = plt.subplots(figsize=(4, 4))
+    pos = nx.circular_layout(G)
+    nx.draw(
+        G, pos, with_labels=True, node_color = 'white',edge_color=edge_colors, edge_cmap=plt.cm.bwr,
+        edge_vmin=-1, edge_vmax=1, ax=ax
+    )
+    plt.savefig(plotpath + '04.small_net_yoked_{}.pdf'.format(subset), dpi=300)
+    plt.close()
+
+
+for subset in subset_list_Trained:
+    G = nx.Graph()
+    for gene in subset:
+        G.add_node(gene)
+    for gene in subset:
+        for gene2 in subset:
+            if gene != gene2:
+                weight = candy_DG_trained_corr.loc[gene, gene2]
+                G.add_edge(gene, gene2, weight=weight)
+    edge_colors = [G[u][v]['weight'] for u, v in G.edges()]
+    fig, ax = plt.subplots(figsize=(4, 4))
+    pos = nx.circular_layout(G)
+    nx.draw(
+        G, pos, with_labels=True, node_color = 'white',edge_color=edge_colors, edge_cmap=plt.cm.bwr,
+        edge_vmin=-1, edge_vmax=1, ax=ax
+    )
+    plt.savefig(plotpath + '04.small_net_trained_{}.pdf'.format(subset), dpi=300)
+    plt.close()
 
 
 
+candy_DG_trained_corr_df = candy_DG_trained_corr.reset_index().melt(id_vars='index', var_name='column', value_name='value').rename(columns={'index': 'row'})
+candy_DG_trained_corr_df['pair'] = candy_DG_trained_corr_df.apply(lambda row : row['row'] + '_' + row['column'] if row['row'] < row['column'] else row['column'] + '_' + row['row'], axis=1)
+candy_DG_trained_corr_df2 = pd.DataFrame(candy_DG_trained_corr_df.groupby('pair')['value'].mean())
+candy_DG_trained_corr_df2['row'] = candy_DG_trained_corr_df2.index.str.split('_').str[0]
+candy_DG_trained_corr_df2['column'] = candy_DG_trained_corr_df2.index.str.split('_').str[1]
+candy_DG_trained_corr_df2 = candy_DG_trained_corr_df2[candy_DG_trained_corr_df2.row != candy_DG_trained_corr_df2.column]
+
+candy_DG_trained_corr_df2.to_csv(datapath + '04.candy_net_trained_corr.csv')
 
 
+candy_DG_yoked_corr_df = candy_DG_yoked_corr.reset_index().melt(id_vars='index', var_name='column', value_name='value').rename(columns={'index': 'row'})
+candy_DG_yoked_corr_df['pair'] = candy_DG_yoked_corr_df.apply(lambda row : row['row'] + '_' + row['column'] if row['row'] < row['column'] else row['column'] + '_' + row['row'], axis=1)
+candy_DG_yoked_corr_df2 = pd.DataFrame(candy_DG_yoked_corr_df.groupby('pair')['value'].mean())
+candy_DG_yoked_corr_df2['row'] = candy_DG_yoked_corr_df2.index.str.split('_').str[0]
+candy_DG_yoked_corr_df2['column'] = candy_DG_yoked_corr_df2.index.str.split('_').str[1]
+candy_DG_yoked_corr_df2 = candy_DG_yoked_corr_df2[candy_DG_yoked_corr_df2.row != candy_DG_yoked_corr_df2.column]
 
-
-
-
-
-
-
-
+candy_DG_yoked_corr_df2.to_csv(datapath + '04.candy_net_yoked_corr.csv')
 
 
 
